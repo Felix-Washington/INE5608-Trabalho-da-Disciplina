@@ -1,4 +1,5 @@
-from controladores.ControladorPrincipal import ControladorPrincipal
 
+from controladores.board import board
 if __name__ == '__main__':
-    ControladorPrincipal().inicia()
+
+    board(3, 10).start()
