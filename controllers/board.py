@@ -7,7 +7,7 @@ from tkinter import messagebox
 
 
 class board:
-    def __init__(self, player_amount, deck_cards):
+    def __init__(self, player_amount, deck_card_amount):
         self.__player_amount = player_amount
         self.__tile_amount = 5
         self.__positions = []
@@ -18,31 +18,26 @@ class board:
         self.__root.title("Board")
         self.__root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-        # Boards
-        self.__board_frame = tk.Frame(self.__root, bg="blue", padx=30, pady=15, relief="sunken",borderwidth=2)
+        # Board Frames
+        self.__board_frame = tk.Frame(self.__root, bg="blue", padx=30, pady=15, relief="sunken", borderwidth=2)
 
         self.__nav_bar = tk.Frame( self.__board_frame, bg="green", height=150, width=150)
-        self.__board_positions = tk.Frame(self.__board_frame, bg="yellow", height=350, width=150,relief="sunken")
+        self.__board_positions = tk.Frame(self.__board_frame, bg="yellow", height=350, width=150, relief="sunken")
         self.__hud = tk.Frame(self.__board_frame, bg="red", height=150, width=150)
 
-        self.__board_positions2 = tk.Frame(self.__board_positions, bg="yellow", height=350, width=150,relief="sunken")
-
+        self.__board_positions2 = tk.Frame(self.__board_positions, bg="yellow", height=350, width=150, relief="sunken")
 
         # Row and Column configs
-        self.__board_frame.columnconfigure(0, weight=1)
-        self.__board_frame.rowconfigure(0, weight=1)
-        self.__board_frame.rowconfigure(1, weight=2)
-        self.__board_frame.rowconfigure(2, weight=1)
-
-        #self.__board_positions.rowconfigure(0, weight=1)
-        self.__board_positions.columnconfigure(0, weight=2)
-        self.__board_positions.columnconfigure(1, weight=1)
-
+        self.column_frame_configure(self.__board_frame, 1, [1])
+        self.row_frame_configure(self.__board_frame, 3, [1, 2, 1])
+        self.column_frame_configure(self.__board_positions, 2, [1, 2, 1])
 
         # Others vars
         self.__check_state = tk.IntVar()
         self.__textbox = tk.Text(self.__nav_bar, height=2, width=50)
+
         self.__deck = tk.Button(self.__board_positions, text="Deck", width=30, height=10, command=self.show_message)
+
         self.__check = tk.Checkbutton(self.__hud, text="Show Message", variable=self.__check_state)
         self.__check.grid(pady=10)
 
@@ -62,6 +57,14 @@ class board:
 
     def start(self):
         self.__root.mainloop()
+
+    def row_frame_configure(self, frame, row_amount, weight: []):
+        for i in range(row_amount):
+            frame.rowconfigure(i, weight=weight[i])
+
+    def column_frame_configure(self, frame: tk.Frame, column_amount: int, weight: []):
+        for i in range(column_amount):
+            frame.columnconfigure(i, weight=weight[i])
 
     # Create all board positions
     def set_positions(self):
@@ -93,15 +96,14 @@ class board:
 
     def show_message(self):
         if self.__check_state.get() == 0:
-
-            print(self.__textbox. get("1.0", tk.END))
+            print("Deck")
         else:
-            messagebox.showinfo(title="Message", message=self.__textbox.get("1.0", tk.END))
+            #messagebox.showinfo(title="Message", message=self.__textbox.get("1.0", tk.END))
+            print(self.__textbox.get("1.0", tk.END))
 
     def on_closing(self):
-        self.__root.destroy()
-        #if messagebox.askyesno(title="Quit", message="Wanna Quit?"):
-        #    self.__root.destroy()
+        if messagebox.askyesno(title="Quit", message="Quer Sair?"):
+            self.__root.destroy()
 
     def shortcut(self, event):
         if event.state == 12 and event.keysym == "Return":
@@ -110,16 +112,18 @@ class board:
     def set_menu(self):
         self.__menubar = tk.Menu(self.__root)
         self.__filemenu = tk.Menu(self.__menubar, tearoff=0)
-        self.__filemenu.add_command(label="Close", command=self.on_closing)
+        self.__filemenu.add_command(label="Start Match", command=self.start_match)
         self.__filemenu.add_separator()
-        self.__filemenu.add_command(label="Close wt question", command=exit)
+        self.__filemenu.add_command(label="Close", command=self.on_closing)
 
         self.__menubar.add_cascade(menu=self.__filemenu, label="File")
 
         self.__root.config(menu=self.__menubar)
 
-    def widget_packs(self):
+    def start_match(self):
+        print("Start Match")
 
+    def widget_packs(self):
         self.__board_frame.pack(fill="both", expand=True)
         self.__nav_bar.grid(row=0, column=0, sticky="ew")
         self.__board_positions.grid(row=1, column=0, sticky="ew")
@@ -127,8 +131,8 @@ class board:
         self.__hud.grid(row=2, column=0, sticky="ew")
 
         self.__deck.grid( column=1, sticky="NS" )
+
         self.__textbox.grid(padx=10)
         for i in range(len(self.__positions)):
-
             self.__positions[i].grid(column=i, row=0, pady=1)
 
