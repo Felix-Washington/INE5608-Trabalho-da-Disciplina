@@ -1,16 +1,27 @@
-import random
-from PIL import Image, ImageTk
-from controllers.deck import deck
-
+# Tkinter Imports
 import tkinter as tk
 from tkinter import messagebox
+from PIL import Image, ImageTk
+
+# Project Imports
+from controllers.deck import deck
+from model.player import player
+
+# Misc imports
+import random
 
 
 class board:
-    def __init__(self, player_amount, deck_card_amount):
-        self.__player_amount = player_amount
+    def __init__(self, deck_card_amount):
+        # Project attributes
         self.__tile_amount = 5
         self.__positions = []
+        self.__players = []
+        self.__winner = None
+        self.__match_status = False
+        self.__selected_player = -1
+        self.__turn_control = -1
+        self.__opponent_answered = False
 
         # Root config
         self.__root = tk.Tk()
@@ -20,34 +31,35 @@ class board:
 
         # Board Frames
         self.__board_frame = tk.Frame(self.__root, bg="blue", padx=30, pady=15, relief="sunken", borderwidth=2)
-
         self.__nav_bar = tk.Frame( self.__board_frame, bg="green", height=150, width=150)
         self.__board_positions = tk.Frame(self.__board_frame, bg="yellow", height=350, width=150, relief="sunken")
         self.__hud = tk.Frame(self.__board_frame, bg="red", height=150, width=150)
 
+        # Frames - board_positions
         self.__board_positions2 = tk.Frame(self.__board_positions, bg="yellow", height=350, width=150, relief="sunken")
 
-        # Row and Column configs
+        # Frames - hud
+        self.__hud_player_img = tk.Label(self.__hud, bg="pink", height=10, width=10)
+        player_img = self.load_label_img (self.__hud_player_img, "controllers/kid_one.png")
+
+        self.__players.append(player_img)
+
+        # Row and Column configs - Para: frame, amount (columns or rows), weight
         self.column_frame_configure(self.__board_frame, 1, [1])
         self.row_frame_configure(self.__board_frame, 3, [1, 2, 1])
         self.column_frame_configure(self.__board_positions, 2, [1, 2, 1])
+        self.column_frame_configure(self.__hud, 2, [1, 2])
 
         # Others vars
         self.__check_state = tk.IntVar()
         self.__textbox = tk.Text(self.__nav_bar, height=2, width=50)
-
         self.__deck = tk.Button(self.__board_positions, text="Deck", width=30, height=10, command=self.show_message)
-
         self.__check = tk.Checkbutton(self.__hud, text="Show Message", variable=self.__check_state)
         self.__check.grid(pady=10)
-
-        self.set_positions()
-        self.widget_packs()
 
         # Menu vars
         self.__menubar = None
         self.__filemenu = None
-        self.set_menu()
 
         # Frame propagate
         self.__board_frame.pack_propagate(False)
@@ -55,7 +67,12 @@ class board:
         self.__board_positions.grid_propagate( False )
         self.__hud.grid_propagate( False )
 
-    def start(self):
+        # Start functions
+        self.set_menu()
+        self.set_positions()
+        self.widget_packs()
+
+    def board_loop(self):
         self.__root.mainloop()
 
     def row_frame_configure(self, frame, row_amount, weight: []):
@@ -81,15 +98,19 @@ class board:
                 number = 0
             else:
                 number = int(random.uniform(1, 4))
-            image = Image.open( "controllers/" + position_types[number] )
-            photo = ImageTk.PhotoImage( image )
 
-            position = tk.Label(self.__board_positions2, image=photo)
-            position.image = photo
+            position = self.load_label_img(self.__board_positions2, "controllers/" + position_types[number])
             # Bind and especific event for each position.
             position.bind( "<Button-1>", lambda event="", position_number=i: self.position_bind(event, position_number))
 
             self.__positions.append(position)
+
+    def load_label_img(self, widget, path):
+        image = Image.open(path)
+        photo = ImageTk.PhotoImage( image )
+        label = tk.Label( widget, image=photo )
+        label.image = photo
+        return label
 
     def position_bind(self, event, a):
         print(self.__positions[a].image)
@@ -98,7 +119,6 @@ class board:
         if self.__check_state.get() == 0:
             print("Deck")
         else:
-            #messagebox.showinfo(title="Message", message=self.__textbox.get("1.0", tk.END))
             print(self.__textbox.get("1.0", tk.END))
 
     def on_closing(self):
@@ -112,7 +132,7 @@ class board:
     def set_menu(self):
         self.__menubar = tk.Menu(self.__root)
         self.__filemenu = tk.Menu(self.__menubar, tearoff=0)
-        self.__filemenu.add_command(label="Start Match", command=self.start_match)
+        self.__filemenu.add_command(label="Procurar jogador", command=self.start_match)
         self.__filemenu.add_separator()
         self.__filemenu.add_command(label="Close", command=self.on_closing)
 
@@ -121,7 +141,7 @@ class board:
         self.__root.config(menu=self.__menubar)
 
     def start_match(self):
-        print("Start Match")
+        messagebox.showinfo(title="Message", message="Procurar Jogador")
 
     def widget_packs(self):
         self.__board_frame.pack(fill="both", expand=True)
@@ -131,8 +151,10 @@ class board:
         self.__hud.grid(row=2, column=0, sticky="ew")
 
         self.__deck.grid( column=1, sticky="NS" )
+        self.__hud_player_img.grid(column=0, sticky="NS" )
 
-        self.__textbox.grid(padx=10)
+        self.__textbox.grid(column=1, padx=10)
         for i in range(len(self.__positions)):
             self.__positions[i].grid(column=i, row=0, pady=1)
 
+        self.__players[0].grid(column=0)

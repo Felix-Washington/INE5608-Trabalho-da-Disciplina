@@ -1,13 +1,14 @@
 
 import tkinter as tk
 
+from controllers.card import card
 
-class deck(tk.Button):
-    def __init__(self, master, card_amount, command):
+
+class deck:
+    def __init__(self, card_amount ):
         super().__init__()
         self.__card_amount = card_amount
-        self.__master = master
-        self.__text = "Deck"
-        self.__width = 30
-        self.__height = 10
-        self.__command = command
+        self.__questions = {}
+        self.__used_questions = []
+        self.__answers = {}
+        self.__card = card
