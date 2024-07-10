@@ -1,5 +1,5 @@
 
-class player:
+class Player:
     def __init__(self, name, image):
         self.__name = name
         self.__position_board = 0

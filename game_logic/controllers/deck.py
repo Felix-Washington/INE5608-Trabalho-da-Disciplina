@@ -1,9 +1,9 @@
 import tkinter as tk
 import random
-from game_logic.controllers.card import card
+from controllers.card import Card
 
 
-class deck( tk.Frame ):
+class Deck( tk.Frame ):
     def __init__(self, parent, controller, card_amont=10):
         tk.Frame.__init__( self, parent )
 
@@ -40,12 +40,10 @@ class deck( tk.Frame ):
                 added = False
                 control += 1
         print(questions_card)
-        self.__card = card(self, questions_card, answers_card)
+        self.__card = Card(self, questions_card, answers_card)
         self.__button['state'] = 'disabled'
 
         controller.show_card(self.__card)
-
-
 
 
     def button(self):

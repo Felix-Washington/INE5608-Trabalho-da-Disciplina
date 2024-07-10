@@ -2,22 +2,18 @@
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
-#from py_netgames_client.tkinter_client.PyNetgamesServerProxy import PyNetgamesServerProxy
-#from py_netgames_client.tkinter_client.PyNetgamesServerListener import PyNetgamesServerListener
 import os
-import keyboard
 
-from game_logic.view.frames import frames
-from game_logic.controllers.deck import deck
+from controllers.deck import Deck
 
 # Project Imports
-from game_logic.model.player import player
+from model.player import Player
 
 # Misc imports
 import random
 
-'''(PyNetgamesServerListener)'''
-class board :
+
+class Board:
     def __init__(self):
         # Project attributes
         super().__init__()
@@ -47,7 +43,6 @@ class board :
         # Frames - hud
         self.__hud_player_img = tk.Label(self.__hud, bg="pink", height=10, width=10)
 
-
         self.create_players()
         self.create_players()
         self.create_players()
@@ -63,7 +58,7 @@ class board :
         self.__check = tk.Checkbutton(self.__hud, text="Show Message", variable=self.__check_state)
         self.__check.grid(pady=10)
 
-        self.__deck = deck(self.__board_positions, self)
+        self.__deck = Deck(self.__board_positions, self)
 
         # Menu vars
         self.__menubar = None
@@ -80,24 +75,18 @@ class board :
         self.set_positions()
         self.widget_packs()
 
-        #self.add_listener()
-        #self.send_connect()
-
-
     def create_players(self, name="kid"):
         img = "images/"
         if len(self.__players) == 0:
             img += "kid_one.png"
-
         elif len( self.__players ) == 1:
             img += "kid_two.png"
         elif len( self.__players ) == 2:
             img += "kid_three.png"
 
         player_img = self.load_label_img(self.__hud_player_img, img)
-        player1 = player(name, player_img)
+        player1 = Player(name, player_img)
         self.__players.append(player1)
-
 
     def show_card(self, frame):
         print(frame)
@@ -106,7 +95,6 @@ class board :
 
     def board_loop(self):
         self.__root.mainloop()
-
 
     def row_frame_configure(self, frame, row_amount, weight: []):
         for i in range(row_amount):
@@ -150,7 +138,6 @@ class board :
     def position_bind(self, event, a):
         print(self.__positions[a].image , "teste")
 
-
     def show_message(self):
         if self.__check_state.get() == 0:
             print("Deck")
@@ -158,7 +145,7 @@ class board :
             print(self.__textbox.get("1.0", tk.END))
 
     def on_closing(self):
-        #if messagebox.askyesno(title="Quit", message="Quer Sair?"):
+        if messagebox.askyesno(title="Quit", message="Quer Sair?"):
             self.__root.destroy()
 
     def shortcut(self, event):
@@ -201,39 +188,3 @@ class board :
 
         for i in range(len(self.__players)):
             self.__players[i].image.grid(row=0, column=i)
-
-
-    # Pynetgames
-    '''
-    def add_listener(self):
-        #self.server_proxy = PyNetgamesServerProxy()
-        self.server_proxy.add_listener(self)
-
-    def send_connect(self):
-        self.server_proxy.send_connect("wss://py-netgames-server.fly.dev")
-
-    def start_match(self):
-        messagebox.showinfo(title="Message", message="Procurar Jogador")
-
-
-    def send_match(self):
-        self.server_proxy.send_match(2)
-
-    def receive_connection_success(self):
-        print("***************CONNECTED***************")
-        self.send_match()
-
-    def receive_disconnect(self):
-        pass
-
-    def receive_error(self, error):
-        pass
-
-    def receive_match(self, match):  # Pyng use case "receive match"
-        print( '*************** START MATCH ***************' )
-        print( '*************** ORDER: ', match.position )
-        print( '*************** match_id: ', match.match_id )
-
-    def receive_move(self, move):
-        pass
-    '''
