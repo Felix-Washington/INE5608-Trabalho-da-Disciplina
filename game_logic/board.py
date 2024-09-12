@@ -1,13 +1,15 @@
 # Tkinter Imports
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import simpledialog
 from PIL import Image, ImageTk
 import os
 
-from controllers.deck import Deck
+from deck import Deck
 
 # Project Imports
-from model.player import Player
+from player import Player
+from position import Position
 
 # Misc imports
 import random
@@ -34,7 +36,7 @@ class Board:
 
         # Board Frames
         self.__board_frame = tk.Frame(self.__root, bg="blue", padx=30, pady=15, relief="sunken", borderwidth=2)
-        self.__nav_bar = tk.Frame( self.__board_frame, bg="green", height=150, width=150)
+        # self.__nav_bar = tk.Frame( self.__board_frame, bg="green", height=150, width=150)
         self.__board_positions = tk.Frame(self.__board_frame, bg="pink", height=350, width=150, relief="sunken")
         self.__hud = tk.Frame(self.__board_frame, bg="red", height=150, width=150)
 
@@ -54,7 +56,7 @@ class Board:
 
         # Others vars
         self.__check_state = tk.IntVar()
-        self.__textbox = tk.Text(self.__nav_bar, height=2, width=50)
+        # self.__textbox = tk.Text(self.__nav_bar, height=2, width=50)
         self.__check = tk.Checkbutton(self.__hud, text="Show Message", variable=self.__check_state)
         self.__check.grid(pady=10)
 
@@ -66,7 +68,7 @@ class Board:
 
         # Frame propagate
         self.__board_frame.pack_propagate(False)
-        self.__nav_bar.grid_propagate( False )
+        # self.__nav_bar.grid_propagate( False )
         self.__board_positions.grid_propagate( False )
         self.__hud.grid_propagate( False )
 
@@ -74,6 +76,10 @@ class Board:
         self.set_menu()
         self.set_positions()
         self.widget_packs()
+
+        player_name = simpledialog.askstring(title="Player identification", prompt="Qual o seu nome?")
+        print(player_name)
+        self.__root.focus()
 
     def create_players(self, name="kid"):
         img = "images/"
@@ -88,10 +94,27 @@ class Board:
         player1 = Player(name, player_img)
         self.__players.append(player1)
 
-    def show_card(self, frame):
-        print(frame)
-        self.__board_frame = tk.Frame(frame, bg="yellow", padx=30, pady=15, relief="sunken", borderwidth=2)
-        self.__board_frame.pack()
+    def show_card(self, card, button):
+
+        def end_carta(button):
+            button['state'] = 'normal'
+            self.tela_carta.destroy()
+
+        print(card.questions)
+        self.tela_carta = tk.Toplevel()
+        self.tela_carta.geometry('400x300+0+0')
+        self.tela_carta.resizable(width=False, height=False)
+        self.titulo = tk.Label(self.tela_carta, padx=10, pady=10, text='Carta')
+        self.titulo.pack(padx=10, pady=10)
+        self.card = tk.Frame(self.tela_carta, height=200, width=300, bg='blue')
+        self.card.pack(padx=10, pady=10)
+        for question in card.questions:
+            self.question = tk.Button(self.card, text=question, command=lambda question=question: print(f'Pergunta {question} clicada'), width=100)
+            self.question.pack(padx=10, pady=10)
+        self.tela_carta.focus()
+        self.tela_carta.grab_set()
+        self.tela_carta.protocol("WM_DELETE_WINDOW", lambda: end_carta(button))
+
 
     def board_loop(self):
         self.__root.mainloop()
@@ -122,11 +145,11 @@ class Board:
             else:
                 number = 0
 
-            image_path = os.path.join(os.path.dirname(__file__), "../images/" + position_types[number])
+            image_path = os.path.join(os.path.dirname(__file__), "./images/" + position_types[number])
             position = self.load_label_img(self.__board_positions2, image_path)
             # Bind and specify event for each position.
             position.bind( "<Button-1>", lambda event="", position_number=i: self.position_bind(event, position_number))
-            self.__positions.append(position)
+            self.__positions.append(Position(number, position))
 
     def load_label_img(self, widget, path):
         image = Image.open(path)
@@ -136,13 +159,13 @@ class Board:
         return label
 
     def position_bind(self, event, a):
-        print(self.__positions[a].image , "teste")
+        print(self.__positions[a].widget.image , "teste")
 
     def show_message(self):
         if self.__check_state.get() == 0:
             print("Deck")
-        else:
-            print(self.__textbox.get("1.0", tk.END))
+        # else:
+        #     print(self.__textbox.get("1.0", tk.END))
 
     def on_closing(self):
         if messagebox.askyesno(title="Quit", message="Quer Sair?"):
@@ -165,26 +188,27 @@ class Board:
 
     def widget_packs(self):
         self.__board_frame.pack(fill="both", expand=True)
-        self.__nav_bar.grid(row=0, sticky="ew")
+        # self.__nav_bar.grid(row=0, sticky="ew")
         self.__board_positions.grid(row=1, sticky="ew")
         self.__hud.grid(row=2, sticky="ew")
 
         self.__board_positions2.grid(column=0, sticky="ew")
-        self.__deck.grid( column=1, sticky="NS" )
+        self.__deck.grid( row=0, column=1, sticky="NS" )
 
         self.__hud_player_img.grid(column=0, sticky="NS" )
 
-        self.__textbox.grid(column=1, padx=10)
+        # self.__textbox.grid(column=1, padx=10)
 
         row = 0
         column = 0
         for i in range(len(self.__positions)):
-            self.__positions[i].grid(column=column, row=row, pady=1)
+            self.__positions[i].widget.grid(column=column, row=row, pady=5, padx=5)
             if column > 3:
                 row += 1
                 column = 0
             else:
                 column += 1
+            print(row, column)
 
         for i in range(len(self.__players)):
             self.__players[i].image.grid(row=0, column=i)
