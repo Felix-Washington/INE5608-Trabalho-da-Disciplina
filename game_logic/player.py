@@ -41,7 +41,12 @@ class Player:
     def get_identifier(self):
         return self.__identifier
 
-    def get_turn(self):
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def turn(self):
         return self.__turn
 
     def get_image(self):
