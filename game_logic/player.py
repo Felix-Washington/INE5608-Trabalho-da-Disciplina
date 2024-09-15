@@ -16,6 +16,10 @@ class Player:
         self.__position_board = position
 
     @property
+    def name(self):
+        return self.__name
+
+    @property
     def turn(self):
         return self.__turn
 

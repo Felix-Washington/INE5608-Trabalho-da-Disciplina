@@ -6,22 +6,22 @@ class Card(tk.Frame):
         super().__init__( parent )
         self.__questions = questions
         self.__answers = answers
-        self.__answered = False
-        self.width = 100
+        self.__width = 400
+        self.__height = 600
 
     @property
     def questions(self):
         return self.__questions
-    
+
+    @property
+    def width(self):
+        return self.__width
+
+    @property
+    def height(self):
+        return self.__height
+
     @property
     def answers(self):
         return self.__answers
 
-    @property
-    def answered(self):
-        return self.__answered
-
-
-    @answered.setter
-    def answered(self, new_status):
-        self.__answered = new_status
