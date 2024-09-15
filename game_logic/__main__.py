@@ -1,6 +1,4 @@
-
-from board import Board
+from player_interface import PlayerInterface
 
 if __name__ == '__main__':
-    Board().board_loop()
-
+    PlayerInterface().board_loop()

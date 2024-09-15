@@ -24,7 +24,7 @@ class Deck( tk.Frame ):
         self.__button.configure()
         # self.__button.bind('<Button-1>', )
 
-    def comprar_carta(widget,button):
+    def pick_card(widget,button):
         print(widget, button)
         print('carta comprada')
 
