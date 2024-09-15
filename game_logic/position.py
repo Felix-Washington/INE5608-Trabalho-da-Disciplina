@@ -19,7 +19,7 @@ class Position(tk.Label):
         return self.__occupants
 
     @property
-    def get_widget(self):
+    def widget(self):
         return self.__widget
 
     @property
