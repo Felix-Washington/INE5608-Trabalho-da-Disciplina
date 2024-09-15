@@ -28,7 +28,6 @@ class Player:
         elif self.turn == True:
             self.turn = False
 
-
     def move_position(self, num_positions, is_right):
         if is_right:
             self.__position_board += num_positions

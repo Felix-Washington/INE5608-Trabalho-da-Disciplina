@@ -13,20 +13,45 @@ from deck import Deck
 from board import Board
 from position import Position
 
-class PlayerInterface(DogPlayerInterface):
+
+def row_frame_configure(frame, row_amount, weight):
+    for i in range( row_amount ):
+        frame.rowconfigure( i, weight=weight[i] )
+
+
+def column_frame_configure(frame: Frame, column_amount: int, weight):
+    for i in range( column_amount ):
+        frame.columnconfigure( i, weight=weight[i] )
+
+
+class PlayerInterface( DogPlayerInterface ):
     def __init__(self):
+        super().__init__()
         self.board = Board()
         # Root config
         self.__root = Tk()
-        self.load_main_window()
+
+        self.__window_width, self.__window_height = 0, 0
+
+        # Frames
+        self.__board_frame, self.__board_positions, self.__hud, self.__deck = None, None, None, None
+        self.__tiles_board = None
+
+        # Label
+        self.__hud_player_img = None
+
+        # Menus
+        self.__menubar, self.__filemenu = None, None
 
         # game_state = self.board.get_status()
         # self.update_gui(game_state)
 
-        player_name = simpledialog.askstring(title="Player identification", prompt="Qual o seu nome?")
-        self.dog_server_interface = DogActor()
-        print(player_name)
+        self.load_main_window()
 
+        # Prevent main windows from minimize
+        self.__root.deiconify()
+
+        self.dog_server_interface = DogActor()
 
     def load_main_window(self):
         size = [int( self.__root.winfo_screenwidth() / 3 ), 800]
@@ -36,36 +61,32 @@ class PlayerInterface(DogPlayerInterface):
         self.__root.title( "Tabuleiro" )
         self.__root.protocol( "WM_DELETE_WINDOW", self.on_closing )
 
-        self.__root.resizable(False, False)
+        self.__root.resizable( False, False )
 
-                # Board Frames
-        self.__board_frame = Frame(self.__root, bg="blue", padx=30, pady=15, relief="sunken", borderwidth=2)
-        # self.__nav_bar = .Frame( self.__board_frame, bg="green", height=150, width=150)
-        self.__board_positions = Frame(self.__board_frame, bg="pink", height=350, width=150, relief="sunken")
-        self.__hud = Frame(self.__board_frame, bg="red", height=150, width=150)
+        # Board Frames
+        self.__board_frame = Frame( self.__root, bg="blue", padx=30, pady=15, relief="sunken", borderwidth=2 )
+        self.__board_positions = Frame( self.__board_frame, bg="pink", height=350, width=150, relief="sunken" )
+        self.__hud = Frame( self.__board_frame, bg="red", height=150, width=150 )
 
-  # Frames - hud
-        self.__hud_player_img = Label(self.__hud, bg="pink", height=10, width=10)
-
-        # Row and Column configs - Para: frame, amount (columns or rows), weight
-        self.column_frame_configure(self.__board_frame, 1, [1])
-        self.row_frame_configure(self.__board_frame, 3, [1, 2, 1])
-        self.column_frame_configure(self.__board_positions, 2, [1,5])
-        self.column_frame_configure(self.__hud, 2, [1, 2])
-
-        self.__deck = Deck(self.__board_positions, self)
-
-        self.__board_frame.pack_propagate(False)
-        # self.__nav_bar.grid_propagate( False )
-        self.__board_positions.grid_propagate( False )
-        self.__hud.grid_propagate( False )
-
-                # Frames - board_positions
-        self.__tiles_board = Frame( self.__board_positions, bg="yellow", height=350, width=150,
-                                            relief="sunken" )
         # Frames - hud
         self.__hud_player_img = Label( self.__hud, bg="pink", height=10, width=10 )
 
+        # Row and Column configs - Para: frame, amount (columns or rows), weight
+        column_frame_configure( self.__board_frame, 1, [1] )
+        row_frame_configure( self.__board_frame, 3, [1, 2, 1] )
+        column_frame_configure( self.__board_positions, 2, [1, 5] )
+        column_frame_configure( self.__hud, 2, [1, 2] )
+
+        self.__deck = Deck( self.__board_positions, self )
+
+        self.__board_frame.pack_propagate( False )
+        self.__board_positions.grid_propagate( False )
+        self.__hud.grid_propagate( False )
+
+        # Frames - board_positions
+        self.__tiles_board = Frame( self.__board_positions, bg="yellow", height=350, width=150, relief="sunken" )
+        # Frames - hud
+        self.__hud_player_img = Label( self.__hud, bg="pink", height=10, width=10 )
 
         self.set_menu()
         self.set_positions()
@@ -73,10 +94,10 @@ class PlayerInterface(DogPlayerInterface):
 
     def show_card(self, card, button, state="questions"):
         card_interface = Toplevel()
-        card_interface.title("Carta")
+        card_interface.title( "Carta" )
 
-        def end_carta(button):
-            button['state'] = 'normal'
+        def end_carta(button_):
+            button_['state'] = 'normal'
             card_interface.destroy()
 
         card_width_pos = int( self.__window_width + self.__window_width / 2 - (card.width / 2) )
@@ -117,17 +138,8 @@ class PlayerInterface(DogPlayerInterface):
         card_interface.grab_set()
         card_interface.protocol( "WM_DELETE_WINDOW", lambda: end_carta( button ) )
 
-
     def board_loop(self):
         self.__root.mainloop()
-
-    def row_frame_configure(self, frame, row_amount, weight):
-        for i in range(row_amount):
-            frame.rowconfigure(i, weight=weight[i])
-
-    def column_frame_configure(self, frame: Frame, column_amount: int, weight):
-        for i in range(column_amount):
-            frame.columnconfigure(i, weight=weight[i])
 
     # Create all board positions
     def set_positions(self):
@@ -136,15 +148,13 @@ class PlayerInterface(DogPlayerInterface):
             1: "simples.png",
             2: "multipla.png",
             3: "desafio.png",
-            4: "fim.png"
         }
-        tile_amount = 10
         for i in range( self.board.tile_amount + 2 ):
             # If reached last position, set the final position of the board.
             if i != 0 and i <= self.board.tile_amount:
                 number = int( random.uniform( 1, 4 ) )
             elif i == 0:
-                number = 4
+                number = 1
             else:
                 number = 0
 
@@ -157,68 +167,53 @@ class PlayerInterface(DogPlayerInterface):
         self.board.positions[0].occupants = [0, 1, 2]
 
     def load_label_img(self, widget, path):
-        image = Image.open(path)
-        print(widget, path, image)
+        image = Image.open( path )
         photo = ImageTk.PhotoImage( image )
         label = Label( widget, image=photo )
         label.image = photo
         return label
 
     def position_bind(self, event, a):
-        print(self.board.positions[a].widget.image , "teste")
-
-    def show_message(self):
-        if self.__check_state.get() == 0:
-            print("Deck")
-        # else:
-        #     print(self.__textbox.get("1.0", END))
+        print( self.board.positions[a].widget.image, "teste" )
 
     def on_closing(self):
-        if messagebox.askyesno(title="Quit", message="Quer Sair?"):
+        if messagebox.askyesno( title="Quit", message="Quer Sair?" ):
             self.__root.destroy()
-
-    def shortcut(self, event):
-        if event.state == 12 and event.keysym == "Return":
-            self.show_message()
 
     def set_menu(self):
         self.__menubar = Menu( self.__root )
         self.__filemenu = Menu( self.__menubar, tearoff=0 )
-        self.__filemenu.add_command( label="Procurar jogador" )
+        self.__filemenu.add_command( label="Procurar jogador", command=self.search_player )
         self.__filemenu.add_separator()
         self.__filemenu.add_command( label="Close", command=self.on_closing )
 
         self.__menubar.add_cascade( menu=self.__filemenu, label="File" )
-
         self.__root.config( menu=self.__menubar )
 
-    def widget_packs(self):
-        self.__board_frame.pack(fill="both", expand=True)
-        # self.__nav_bar.grid(row=0, sticky="ew")
-        self.__board_positions.grid(row=1, sticky="ew")
-        self.__hud.grid(row=2, sticky="ew")
+    def search_player(self):
+        player_name = simpledialog.askstring( title="Player identification", prompt="Qual o seu nome?" )
 
-        self.__tiles_board.grid(column=0, sticky="ew")
+    def widget_packs(self):
+        self.__board_frame.pack( fill="both", expand=True )
+        self.__board_positions.grid( row=1, sticky="ew" )
+        self.__hud.grid( row=2, sticky="ew" )
+
+        self.__tiles_board.grid( column=0, sticky="ew" )
         self.__deck.grid( row=0, column=1, sticky="NS" )
 
-        self.__hud_player_img.grid(column=0, sticky="NS" )
-
-        # self.__textbox.grid(column=1, padx=10)
+        self.__hud_player_img.grid( column=0, sticky="NS" )
 
         row = 0
         column = 0
-        for i in range(len(self.board.positions)):
-            self.board.positions[i].widget.grid(column=column, row=row, pady=5, padx=5)
+        for i in range( len( self.board.positions ) ):
+            self.board.positions[i].widget.grid( column=column, row=row, pady=5, padx=5 )
             if column > 3:
                 row += 1
                 column = 0
             else:
                 column += 1
-            print(row, column)
 
         for player in self.board.players:
-            image_path = os.path.join(os.path.dirname(__file__), player.image)
-            player_image = self.load_label_img(self.__hud_player_img, image_path)
-            player_image.grid(row=0, column=i)
-
-    #INFOS GRÁFICAS DO JOGO -> COPIAR DO BOARD E SEPARAR COMO VIEW / CONTROLLER
+            image_path = os.path.join( os.path.dirname( __file__ ), player.image )
+            player_image = self.load_label_img( self.__hud_player_img, image_path )
+            player_image.grid( row=0, column=i )

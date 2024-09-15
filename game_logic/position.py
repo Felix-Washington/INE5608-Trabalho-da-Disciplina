@@ -1,15 +1,17 @@
 import tkinter as tk
+
+
 class Position(tk.Label):
     def __init__(self, position_type, widget):
         super().__init__()
         self.__position_type = position_type
         self.__occupants = []
-        self.widget = widget
+        self.__widget = widget
 
-    def store(self, player):
+    def add_occupant(self, player):
         self.occupants.append(player)
 
-    def remove(self, player):
+    def remove_occupant(self, player):
         self.occupants.remove(player)
 
     @property
@@ -18,12 +20,12 @@ class Position(tk.Label):
 
     @property
     def get_widget(self):
-        return self.widget
+        return self.__widget
 
     @property
     def position_type(self):
         return self.__position_type
 
     @occupants.setter
-    def occupants(self, occupant):
-        self.__occupants = occupant
+    def occupants(self, occupants):
+        self.__occupants = occupants

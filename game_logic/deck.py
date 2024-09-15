@@ -15,14 +15,13 @@ class Deck( tk.Frame ):
         self.__categories = {}
         self.__questions_with_answers = {}
         self.__card = None
-        self.createDicts()
+        self.create_dicts()
 
         self.columnconfigure( 0, weight=1 )
         self.pack(pady=20)
 
         image_path = os.path.join(os.path.dirname(__file__), './images/carta_baixo.png')
         self.__button = self.load_label_img(self, image_path, controller)
-        # self.__button.bind(self, text="Deck", command=lambda: self.create_card(controller), state="normal")
         self.__button.grid(row=0, column=0)
         self.__button.configure()
 
@@ -71,8 +70,7 @@ class Deck( tk.Frame ):
 
         controller.show_card(self.__card, self.__button)
 
-
-    def createDicts(self):
+    def create_dicts(self):
         # Dicionários originais
         questions = {
             0: 'Qual a cor do céu?',
@@ -106,7 +104,7 @@ class Deck( tk.Frame ):
             6: "Tucano", 7: "Caranguejo", 8: "Pirarucu", 9: "Zebra", 10: "Cachorro", 11: "Baleia",
             12: "Rio de Janeiro", 13: "Haiti", 14: "Japão", 15: "Monte Fuji", 16: "Pico da Neblina", 17: "Acre",
             18: "1500", 19: "1889", 20: "1822", 21: "1904", 22: "1903", 23: "1832",
-            24: "Verde", 25: "Vermelho", 26: "Tubarão Baleia", 27: "Cinza", 28: "Preto", 29: "Rosa",
+            24: "Verde", 25: "Vermelho", 26: "Tubarão Baleia", 27: "Cinza", 28: "Chile", 29: "Rosa",
             30: "1700", 31: "Peru", 32: "1667", 33: "Santa Catarina", 34: "Itália", 35: "Jamaica",
             36: "1501", 37: "Beija-flor", 38: "Paraná", 39: "Laranja", 40: "Pato", 41: "Galinha",
             42: "Águia", 43: "Pombo", 44: "Tartaruga", 45: "Golfinho", 46: "Foca", 47: "Peixe",
@@ -123,10 +121,10 @@ class Deck( tk.Frame ):
         }
         # Types: 0 = Colors, 1 = Animals, 2 = Locations, 3 = Dates
         self.__categories = {
-            0: [0, 1, 2, 3, 5, 24, 25, 27, 28, 29, 39],
+            0: [0, 1, 2, 3, 5, 24, 25, 27, 29, 39],
             1: [6, 7, 8, 9, 10, 11, 26, 37, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58,
                 59, 60, 61],
-            2: [4, 12, 13, 14, 15, 16, 17, 31, 33, 34, 35, 38, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75,
+            2: [4, 12, 13, 14, 15, 16, 17, 28, 31, 33, 34, 35, 38, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75,
                 76, 77, 78, 80, 81, 82, 83, 84],
             3: [18, 19, 20, 21, 22, 23, 30, 32, 36, 79, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100,
                 101, 102, 103, 104, 105, 106, 107, 108]

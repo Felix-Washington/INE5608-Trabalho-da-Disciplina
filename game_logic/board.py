@@ -1,14 +1,5 @@
-
-import os
-
-from deck import Deck
-
 # Project Imports
 from player import Player
-from position import Position
-
-# Misc imports
-import random
 
 
 class Board:
@@ -16,16 +7,16 @@ class Board:
         # Project attributes
         super().__init__()
 
-        #Players
+        # Players
         self.local_player = Player()
         self.remote_player1 = Player()
         self.remote_player2 = Player()
-        self.local_player.initialize(1, "images\kid_one.png", "You")
-        self.remote_player1.initialize(2, "images\kid_two.png", "Player 2")
-        self.remote_player2.initialize(3, "images\kid_three.png", "Player 3")
+        self.local_player.initialize(1, "images/kid_one.png", "You")
+        self.remote_player1.initialize(2, "images/kid_two.png", "Player 2")
+        self.remote_player2.initialize(3, "images/kid_three.png", "Player 3")
         self.players = [self.local_player, self.remote_player1, self.remote_player2]
 
-        #Board attributes
+        # Board attributes
         self.tile_amount = 10
         self.positions = []
         self.__winner = None
@@ -56,16 +47,5 @@ class Board:
         for i in self.positions:
             print(i.occupants)
 
-        self.players[0].image.grid( row=0, column=i )
+        # self.players[0].image.grid( row=0, column=i )
 
-    def position_bind(self, event, a):
-        print( self.positions[a], event.x)
-        print(self.positions[a].occupants)
-
-    def show_message(self):
-        if self.__check_state.get() == 0:
-            print( "Deck" )
-
-    def shortcut(self, event):
-        if event.state == 12 and event.keysym == "Return":
-            self.show_message()

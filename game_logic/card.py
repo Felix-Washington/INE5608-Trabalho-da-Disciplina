@@ -10,7 +10,6 @@ class Card(tk.Frame):
         self.__width = 400
         self.__height = 600
 
-
     @property
     def questions(self):
         return self.__questions
