@@ -55,14 +55,60 @@ class PlayerInterface( DogPlayerInterface ):
 
     def load_main_window(self):
         size = [int( self.__root.winfo_screenwidth() / 3 ), 800]
-        self.__window_width = int( self.__root.winfo_screenwidth() / 2 - size[0] / 2 )
-        self.__window_height = int( self.__root.winfo_screenheight() / 2 - size[1] / 2 )
-        self.__root.geometry( f"{size[0]}x{size[1]}+{self.__window_width}+{self.__window_height}" )
+        #self.__window_width = int( self.__root.winfo_screenwidth() / 2 - size[0] / 2 )
+        #self.__window_height = int( self.__root.winfo_screenheight() / 2 - size[1] / 2 )
+        #self.__root.geometry( f"{size[0]}x{size[1]}+{self.__window_width}+{self.__window_height}" )
+        self.__root.geometry("800x800")
         self.__root.title( "Tabuleiro" )
         self.__root.protocol( "WM_DELETE_WINDOW", self.on_closing )
 
         self.__root.resizable( False, False )
+        self.__board = Frame(self.__root, bg="black", padx=10, pady=10, border=2)
+        self.__board.pack(fill="both", expand=True)
 
+        self.__casas = Frame(self.__board, width=750, height=400, bg="black")
+        self.__casas.pack(fill="both", expand=True)
+
+        self.frames = []
+        self.cores = ["yellow", "blue", "red", "yellow", "blue", "red", "yellow", "blue", "red", "yellow"]
+        for i in range(0, 5):
+            if i == 1:
+                frame = Frame(self.__casas, width=69, height=69, bg="yellow")
+                frame.grid(row=1, column=9, padx=5, pady=5)
+                self.frames.append(frame)
+            elif i == 3:
+                frame = Frame(self.__casas, width=69, height=69, bg="red")
+                frame.grid(row=3, column=0, padx=5, pady=5)
+                self.frames.append(frame)
+            else:
+                for j in range(0, 10):
+                    if i == 0 and j == 0:
+                        frame = Frame(self.__casas, width=69, height=69, bg="gray")
+                        frame.grid(row=0, column=0, padx=5, pady=5)
+                        self.frames.append(frame)
+                    elif i == 4 and j == 9:
+                        frame = Frame(self.__casas, width=69, height=69, bg="gray")
+                        frame.grid(row=4, column=9, padx=5, pady=5)
+                        self.frames.append(frame)
+                    else:
+                        frame = Frame(self.__casas, width=69, height=69, bg=self.cores[j])
+                        frame.grid(row=i, column=j, padx=5, pady=5)
+                        self.frames.append(frame)
+
+        #segundo corpo do frame teste
+        self.__contato = Frame(self.__board, width=750, height=400, bg="black")
+        self.__contato.pack(fill="both", expand=True)
+        #turno do jogador
+        self.__turno = Frame(self.__contato, width=300, height=100, bg="red")
+        self.__turno.grid(row=0, column=0, padx=20, pady=5)
+        #andamento do jogo
+        self.__andamento = Frame(self.__contato, width=300, height=200, bg="gray")
+        self.__andamento.grid(row=1, column=0, padx=20, pady=5)
+        #carta
+        self.carta = Frame(self.__contato, width=250, height=310, bg="black", highlightbackground="white",
+                           highlightthickness=2)
+        self.carta.grid(row=0, column=1, rowspan=2, padx=80, pady=5)
+        '''
         # Board Frames
         self.__board_frame = Frame( self.__root, bg="blue", padx=30, pady=15, relief="sunken", borderwidth=2 )
         self.__board_positions = Frame( self.__board_frame, bg="pink", height=350, width=150, relief="sunken" )
@@ -87,7 +133,7 @@ class PlayerInterface( DogPlayerInterface ):
         self.__tiles_board = Frame( self.__board_positions, bg="yellow", height=350, width=150, relief="sunken" )
         # Frames - hud
         self.__hud_player_img = Label( self.__hud, bg="pink", height=10, width=10 )
-
+        '''
         self.set_menu()
         self.set_positions()
         self.widget_packs()
@@ -194,6 +240,7 @@ class PlayerInterface( DogPlayerInterface ):
         player_name = simpledialog.askstring( title="Player identification", prompt="Qual o seu nome?" )
 
     def widget_packs(self):
+        '''
         self.__board_frame.pack( fill="both", expand=True )
         self.__board_positions.grid( row=1, sticky="ew" )
         self.__hud.grid( row=2, sticky="ew" )
@@ -216,4 +263,4 @@ class PlayerInterface( DogPlayerInterface ):
         for player in self.board.players:
             image_path = os.path.join( os.path.dirname( __file__ ), player.image )
             player_image = self.load_label_img( self.__hud_player_img, image_path )
-            player_image.grid( row=0, column=i )
+            player_image.grid( row=0, column=i )'''
