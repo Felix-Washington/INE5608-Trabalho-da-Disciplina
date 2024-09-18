@@ -9,7 +9,6 @@ class Deck( tk.Frame ):
     def __init__(self, parent, controller, card_amount=10):
         tk.Frame.__init__( self, parent )
 
-        self.__card_amount = card_amount
         self.__questions = {}
         self.__answers = {}
         self.__categories = {}
@@ -18,11 +17,10 @@ class Deck( tk.Frame ):
         self.create_dicts()
 
         self.columnconfigure( 0, weight=1 )
-        self.config(background='pink')
-        self.__button = tk.Button(self, width=15, height=13, text="?", command=lambda: self.create_card(controller), bg='black', highlightthickness=2, font=48, fg='white')
+        self.__button = tk.Button(self, width=15, height=13, text="?", command=lambda: self.create_card(controller),
+                                  bg='black', highlightthickness=2, font=48, fg='white')
         self.__button.grid(row=0, column=0)
         self.__button.configure()
-
 
     def create_card(self, controller):
         answers_card = {}
@@ -60,10 +58,10 @@ class Deck( tk.Frame ):
         self.__card = Card(self, questions_card, answers_card)
         self.__button['state'] = 'disabled'
 
-        controller.show_card(self.__card, self.__button)
+        controller.draw_card(self.__card, self.__button)
 
     def create_dicts(self):
-        # Dicionários originais
+        # Initial value
         questions = {
             0: 'Qual a cor do céu?',
             1: 'Qual a cor da luz que reflete todas as cores?',
@@ -148,11 +146,11 @@ class Deck( tk.Frame ):
             22: 22,  # Em que ano foi assinado o Tratado de Petrópolis? -> 1903
             23: 23  # Em que ano ocorreu a guerra da Cisplatina? -> 1832
         }
-        # Misturar as chaves
+        # Shuffle keys
         keys = list( questions.keys() )
         random.shuffle( keys )
 
-        # Criar novos dicionários misturados
+        # Update dicts with shuffle values
         self.__questions = {new_key: questions[old_key] for new_key, old_key in enumerate( keys )}
         self.__questions_with_answers = {new_key: old_key for new_key, old_key in enumerate( keys )}
 
@@ -162,7 +160,7 @@ class Deck( tk.Frame ):
     def create_answers(self, key, controller):
         self.__card = Card( self, {key: self.__questions[key]}, self.__card.answers[key])
         self.__button['state'] = 'disabled'
-        controller.show_card(self.__card, self.__button, "answers")
+        controller.draw_card(self.__card, self.__button, "answers")
 
     def check_answer(self, id_question, answer, controller):
         correct_answer = self.__answers[self.__questions_with_answers[id_question]]

@@ -1,7 +1,7 @@
 import tkinter as tk
 
 
-class Position(tk.Label):
+class Position(tk.Frame):
     def __init__(self, position_type, widget):
         super().__init__()
         self.__position_type = position_type
