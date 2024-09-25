@@ -6,7 +6,7 @@ import os
 
 
 class Deck( tk.Frame ):
-    def __init__(self, parent, controller, card_amount=10):
+    def __init__(self, parent, controller):
         tk.Frame.__init__( self, parent )
 
         self.__questions = {}

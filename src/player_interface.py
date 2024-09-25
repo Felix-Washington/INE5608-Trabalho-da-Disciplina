@@ -2,18 +2,15 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import simpledialog
 
-from deck import Deck
-
 import random
 import os
+from PIL import Image, ImageTk
 
 from dog.dog_interface import DogPlayerInterface
 from dog.dog_actor import DogActor
 
-from PIL import Image, ImageTk
 from deck import Deck
 from board import Board
-from position import Position
 
 
 def row_frame_configure(frame, row_amount, weight):
@@ -29,24 +26,21 @@ def column_frame_configure(frame: Frame, column_amount: int, weight):
 class PlayerInterface( DogPlayerInterface ):
     def __init__(self):
         super().__init__()
-        self.board = Board()
         # Root config
         self.__root = Tk()
-        # x 853: 70 / y 800:70
-        self.__game_pos_x, self.__game_pos_y = 0, 0
+
+        # Window size and position
         self.__game_size = [int( self.__root.winfo_screenwidth() / 3 ), 800]
         self.__game_pos_x = int( self.__root.winfo_screenwidth() / 2 - self.__game_size[0] / 2 )
         self.__game_pos_y = int( self.__root.winfo_screenheight() / 2 - self.__game_size[1] / 2 )
 
+        self.board = Board()
         # Frames
         self.__board_frame, self.__board_positions, self.__hud = None, None, None
         # Hud frames
-        self.__current_turn, self.__logs, self.__deck = None, None, None
+        self.__current_turn, self.__logs = None, None
         # Menus
         self.__menubar, self.__filemenu = None, None
-
-        # game_state = self.board.get_status()
-        # self.update_gui(game_state)
 
         self.load_main_window()
 
@@ -54,6 +48,8 @@ class PlayerInterface( DogPlayerInterface ):
         self.__root.deiconify()
 
         self.dog_server_interface = DogActor()
+
+        self.test = None
 
     def load_main_window(self):
         self.__root.geometry( f"{self.__game_size[0]}x{self.__game_size[1]}+{self.__game_pos_x}+{self.__game_pos_y}" )
@@ -63,7 +59,7 @@ class PlayerInterface( DogPlayerInterface ):
         self.__root.resizable( False, False )
 
         # Board Frames
-        board_color = "black"
+        board_color = "blue"
         self.__board_frame = Frame( self.__root, padx=20, bg=board_color)
         self.__board_positions = Frame( self.__board_frame,  bg=board_color)
         self.__hud = Frame( self.__board_frame, height=(self.__game_size[1]/2) - 100, bg="green")
@@ -74,15 +70,13 @@ class PlayerInterface( DogPlayerInterface ):
         column_frame_configure( self.__hud, 2, [1, 2] )
 
         self.set_menu()
-        self.set_positions()
-        self.set_hud()
         self.widget_packs()
 
     def draw_card(self, card, button, state="questions"):
         card_interface = Toplevel()
         card_interface.title( "Carta" )
 
-        def end_carta(button_):
+        def end_card(button_):
             button_['state'] = 'normal'
             card_interface.destroy()
 
@@ -99,7 +93,7 @@ class PlayerInterface( DogPlayerInterface ):
                 question_button = Button(
                     card_frame,
                     text=question,
-                    command=lambda key=key: [self.__deck.create_answers( key, self ), card_interface.destroy()],
+                    command=lambda key=key: [self.board.deck.create_answers( key, self ), card_interface.destroy()],
                     width=100
                 )
                 question_button.pack( padx=10, pady=10 )
@@ -111,8 +105,8 @@ class PlayerInterface( DogPlayerInterface ):
                 answer_button = Button(
                     card_frame,
                     text=answer,
-                    command=lambda answer_=answer: [self.__deck.check_answer( list( question_key )[0], answer_, self ),
-                                                    end_carta( button )], width=100 )
+                    command=lambda answer_=answer: [self.board.deck.check_answer( list( question_key )[0], answer_, self ),
+                                                    end_card( button )], width=100 )
                 answer_button.pack( padx=10, pady=10 )
 
         card_title.pack( padx=10, pady=10 )
@@ -120,40 +114,44 @@ class PlayerInterface( DogPlayerInterface ):
 
         card_interface.focus()
         card_interface.grab_set()
-        card_interface.protocol( "WM_DELETE_WINDOW", lambda: end_carta( button ) )
+        card_interface.protocol( "WM_DELETE_WINDOW", lambda: end_card( button ) )
 
     def board_loop(self):
         self.__root.mainloop()
 
-    # Create all board positions
+    # Set labels to all positions
     def set_positions(self):
-        position_types = {
-            0: "fim.png",
-            1: "simples.png",
-            2: "multipla.png",
-            3: "desafio.png",
-        }
+        for i in range( len( self.board.positions ) ):
+            position_size = self.__game_size[0] / 10 - 20
 
-        for i in range( self.board.tile_amount + 2 ):
-            # If reached last position, set the final position of the board.
-            if i != 0 and i <= self.board.tile_amount:
-                number = int( random.uniform( 1, 4 ) )
-            elif i == 0:
-                number = 1
-            else:
-                number = 0
+            # Obter o caminho da imagem da posição
+            image_path = self.board.positions[i].image  # Assume que cada posição tem um atributo `image`
 
-            # Bind and specify event for each position.
-            position_size = self.__game_size[0]/10 - 20  # (Window width size / tiles length) - board padx
-            image_path = os.path.join( os.path.dirname( __file__ ), "./images/" + position_types[number] )
-            position = self.load_label_img( self.__board_positions, image_path )
-            position.configure( width=position_size, height=position_size )
-            position.pack_propagate( False )
-            # Bind and specify event for each position.
-            position.bind( "<Button-1>",
-                           lambda event="", position_number=i: self.position_bind( event, position_number ) )
-            self.board.positions.append( Position( number, position ) )
-        self.board.positions[0].occupants = [0, 1, 2]
+            # Verificar se a imagem existe
+            if not os.path.isfile( image_path ):
+                print( f"Imagem não encontrada: {image_path}" )
+                continue  # Pule esta posição se a imagem não existir
+
+            # Criando o Frame
+            position_frame = Frame( self.__board_positions, width=position_size, height=position_size )
+            position_frame.pack_propagate( False )  # Para não ajustar o tamanho do Frame ao conteúdo
+
+            # Carregando a imagem
+            try:
+                position_frame.picture = PhotoImage( file=image_path )  # Usando o caminho dinâmico
+                position_frame.label = Label( position_frame, image=position_frame.picture )
+            except Exception as e:
+                print( f"Erro ao carregar a imagem {image_path}: {e}" )
+                continue  # Pule esta posição se houver um erro ao carregar a imagem
+
+            # Adicionando o Label ao Frame
+            position_frame.label.pack( fill='both', expand=True )  # Para que o Label preencha o Frame
+
+            # Configurando o Frame
+            position_frame.configure( width=position_size, height=position_size )
+
+            # Salvando a referência ao Frame
+            self.board.positions[i].widget = position_frame
 
     def set_hud(self):
         # Show current player turn
@@ -161,8 +159,8 @@ class PlayerInterface( DogPlayerInterface ):
         # Game log
         self.__logs = Frame( self.__hud, width=400, height=200, bg="gray" )
 
-        # deck
-        self.__deck = Deck( self.__hud, self )
+        # Deck
+        self.board.deck = Deck( self.__hud, self )
 
     def load_label_img(self, widget, path):
         image = Image.open( path )
@@ -171,11 +169,7 @@ class PlayerInterface( DogPlayerInterface ):
         label.image = photo
         return label
 
-    def position_bind(self, event, a):
-        print( self.board.positions[a].position_type, "teste" )
-
     def on_closing(self):
-        # if messagebox.askyesno( title="Quit", message="Quer Sair?" ):
         self.__root.destroy()
 
     def set_menu(self):
@@ -188,27 +182,36 @@ class PlayerInterface( DogPlayerInterface ):
         self.__menubar.add_cascade( menu=self.__filemenu, label="File" )
         self.__root.config( menu=self.__menubar )
 
-    def search_player(self):
+    def search_player(self, ):
         player_name = simpledialog.askstring( title="Player identification", prompt="Qual o seu nome?" )
         message = self.dog_server_interface.initialize( player_name, self )
         messagebox.showinfo( message=message )
+        self.board.start_match()
+
+        self.set_positions()
+        self.set_hud()
+        self.start_match_widget_packs()
 
     def widget_packs(self):
         self.__board_frame.pack( fill="both", expand=True )
-
         self.__board_positions.grid( row=0, column=0, sticky="ew" )
         self.__hud.grid( row=2, sticky="ew" )
 
+        # Propagate
+        self.__board_frame.pack_propagate( False )
+        self.__hud.grid_propagate( False )
+
+    def start_match_widget_packs(self):
         self.__current_turn.grid( row=0, column=0, padx=5, pady=5 )
         self.__logs.grid( row=1, column=0, padx=5, pady=5 )
-        self.__deck.grid( row=0, column=1, rowspan=2, padx=5, pady=5 )
+        self.board.deck.grid( row=0, column=1, rowspan=2, padx=5, pady=5 )
 
         row = 0
         column = 0
         reverse = False
         for i in range( len( self.board.positions ) ):
             self.board.positions[i].widget.grid( column=column, row=row, pady=5, padx=5 )
-
+            self.board.positions[i].widget.label.pack_propagate( False )
             if (reverse and column == 0) or (not reverse and column == 9):
                 if row % 2 == 1:
                     reverse = not reverse
@@ -216,6 +219,23 @@ class PlayerInterface( DogPlayerInterface ):
             else:
                 column += -1 if reverse else 1
 
-        # Propagate
-        self.__board_frame.pack_propagate( False )
-        self.__hud.grid_propagate( False )
+            # Adicionando imagens dos ocupantes
+            if self.board.positions[i].occupants:
+                for j, occupant_id in enumerate( self.board.positions[i].occupants ):
+                    occupant_image_path = f"./images/kid_{occupant_id}.png"
+
+                    # Verifique se a imagem do ocupante existe
+                    if os.path.isfile( occupant_image_path ):
+                        occupant_image = PhotoImage( file=occupant_image_path )
+
+                        # Criando um Label para o ocupante
+                        occupant_label = Label( self.board.positions[i].widget, image=occupant_image, width=10, height= 10 )
+                        occupant_label.image = occupant_image  # Manter a referência da imagem
+
+                        # Posicionando o Label do ocupante
+                        occupant_label.grid( row=j, column=0, padx=1, pady=1 )
+                    else:
+                        print( f"Imagem do ocupante não encontrada: {occupant_image_path}" )
+
+
+

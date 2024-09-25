@@ -1,8 +1,12 @@
 # Project Imports
+import random
+
 from player import Player
+from position import Position
+import os
 
 
-# from deck import Deck
+from deck import Deck
 
 
 class Board:
@@ -13,22 +17,26 @@ class Board:
         # Players
         self.local_player = Player()
         self.remote_player1, self.remote_player2 = Player(), Player()
-        self.local_player.initialize( 1, "images/kid_one.png", "You" )
-        self.remote_player1.initialize( 2, "images/kid_two.png", "Player 2" )
-        self.remote_player2.initialize( 3, "images/kid_three.png", "Player 3" )
+        self.local_player.initialize( 1, "images/kid_0.png", "You" )
+        self.remote_player1.initialize( 2, "images/kid_1.png", "Player 2" )
+        self.remote_player2.initialize( 3, "images/kid_2.png", "Player 3" )
         self.players = [self.local_player, self.remote_player1, self.remote_player2]
 
         # Board attributes
-        self.tile_amount = 25
+        self.tile_amount = random.randrange(25, 30)
         self.positions = []
         self.__winner = None
         self.__match_status = False
         self.__selected_player = -1
-        self.__turn_control = -1
+        self.__current_turn = -1
         self.__opponent_answered = False
         self.__match_status = 0
+        self.__turn_order = []
 
-    def start_match(self, players, local_id):
+        self.__deck = None
+
+    def start_match(self, players=0):
+        '''
         player_a_name = players[0][0]
         player_a_id = players[0][1]
         playerA_order = players[0][2]
@@ -47,15 +55,20 @@ class Board:
         else:
             self.remote_player.toogle_turn()
             self.__match_status = 5  # waiting remote action
+        '''
+        self.set_positions()
+        self.__turn_order = []
 
     def reset_game(self):
         pass
 
-    def get_status(self):
-        pass
+    @property
+    def deck(self):
+        return self.__deck
 
-    def get_player_turn(self):
-        pass
+    @deck.setter
+    def deck(self, deck):
+        self.__deck = deck
 
     def get_winner(self):
         if self.__winner:
@@ -65,7 +78,29 @@ class Board:
         for i in self.positions:
             print( i.occupants )
 
-        # self.players[0].image.grid( row=0, column=i )
-
     def get_match_status(self):
         pass
+
+    def set_positions(self):
+        position_types = {
+            0: "fim.png",
+            1: "simples.png",
+            2: "multipla.png",
+            3: "desafio.png",
+        }
+
+        for i in range( self.tile_amount + 2 ):
+            # If reached last position, set the final position of the board.
+            if i != 0 and i <= self.tile_amount:
+                number = int( random.uniform( 1, 4 ) )
+            elif i == 0:
+                number = 1
+            else:
+                number = 0
+
+            image_path = os.path.join( os.path.dirname( __file__ ), "./images/" + position_types[number] )
+
+            self.positions.append( Position( number, None, image_path ) )
+        self.positions[0].occupants = [0, 1]
+        self.positions[1].occupants = [2]
+
