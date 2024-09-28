@@ -23,17 +23,17 @@ class Board:
         self.players = [self.local_player, self.remote_player1, self.remote_player2]
 
         # Board attributes
-        self.tile_amount = random.randrange(25, 30)
+        self.tile_amount = 30
         self.positions = []
         self.__winner = None
-        self.__match_status = False
+        self.__match_status = 0
         self.__selected_player = -1
         self.__current_turn = -1
         self.__opponent_answered = False
         self.__match_status = 0
         self.__turn_order = []
 
-        self.__deck = None
+        self.__deck = Deck(None)
 
     def start_match(self, players=0):
         '''
@@ -56,6 +56,7 @@ class Board:
             self.remote_player.toogle_turn()
             self.__match_status = 5  # waiting remote action
         '''
+        self.__match_status = 1
         self.set_positions()
         self.__turn_order = []
 
@@ -104,3 +105,6 @@ class Board:
         self.positions[0].occupants = [0, 1]
         self.positions[1].occupants = [2]
 
+    @property
+    def match_status(self):
+        return self.__match_status

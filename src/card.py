@@ -1,9 +1,7 @@
-import tkinter as tk
 
 
-class Card(tk.Frame):
-    def __init__(self, parent, questions, answers):
-        super().__init__( parent )
+class Card:
+    def __init__(self, questions, answers):
         self.__questions = questions
         self.__answers = answers
 

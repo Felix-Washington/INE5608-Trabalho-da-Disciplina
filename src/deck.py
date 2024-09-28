@@ -1,13 +1,12 @@
-import tkinter as tk
+
 import random
 from card import Card
-from PIL import ImageTk, Image
+
 import os
 
 
-class Deck( tk.Frame ):
-    def __init__(self, parent, controller):
-        tk.Frame.__init__( self, parent )
+class Deck:
+    def __init__(self, widget):
 
         self.__questions = {}
         self.__answers = {}
@@ -16,11 +15,6 @@ class Deck( tk.Frame ):
         self.__card = None
         self.create_dicts()
 
-        self.columnconfigure( 0, weight=1 )
-        self.__button = tk.Button(self, width=15, height=13, text="?", command=lambda: self.create_card(controller),
-                                  bg='black', highlightthickness=2, font=48, fg='white')
-        self.__button.grid(row=0, column=0)
-        self.__button.configure()
 
     def create_card(self, controller):
         answers_card = {}
@@ -55,10 +49,9 @@ class Deck( tk.Frame ):
 
             answers_card[question_key] = all_answers
 
-        self.__card = Card(self, questions_card, answers_card)
-        self.__button['state'] = 'disabled'
+        self.__card = Card(questions_card, answers_card)
 
-        controller.draw_card(self.__card, self.__button)
+        controller.draw_card(self.__card)
 
     def create_dicts(self):
         # Initial value
@@ -154,13 +147,9 @@ class Deck( tk.Frame ):
         self.__questions = {new_key: questions[old_key] for new_key, old_key in enumerate( keys )}
         self.__questions_with_answers = {new_key: old_key for new_key, old_key in enumerate( keys )}
 
-    def button(self):
-        return self.__button
-
     def create_answers(self, key, controller):
-        self.__card = Card( self, {key: self.__questions[key]}, self.__card.answers[key])
-        self.__button['state'] = 'disabled'
-        controller.draw_card(self.__card, self.__button, "answers")
+        self.__card = Card( {key: self.__questions[key]}, self.__card.answers[key])
+        controller.draw_card(self.__card, "answers")
 
     def check_answer(self, id_question, answer, controller):
         correct_answer = self.__answers[self.__questions_with_answers[id_question]]
