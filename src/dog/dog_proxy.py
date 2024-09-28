@@ -1,7 +1,7 @@
 from distutils.command import config
 import json
 from urllib.parse import urldefrag
-import requests
+import requests # type: ignore
 from dog.start_status import StartStatus
 
 
