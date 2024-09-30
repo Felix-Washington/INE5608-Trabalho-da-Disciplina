@@ -213,7 +213,7 @@ class PlayerInterface:
 
         positions_list[0].grid_propagate( False )
 
-        path = os.path.join( os.path.dirname( __file__ ), "../src/images/kid_0.png" )
+        path = os.path.join( os.path.dirname( __file__ ), "./images/kid_0.png" )
         photo = ImageTk.PhotoImage( Image.open( path ) )
         label = Label( positions_list[0], image=photo )
         label.image = photo
@@ -221,7 +221,7 @@ class PlayerInterface:
         self.__players[0] = label
         self.__players[0].grid( column=0, row=0, padx=3 )
 
-        path = os.path.join( os.path.dirname( __file__ ), "../src/images/kid_1.png" )
+        path = os.path.join( os.path.dirname( __file__ ), "./images/kid_1.png" )
         photo = ImageTk.PhotoImage( Image.open( path ) )
         label = Label( positions_list[0], image=photo )
         label.image = photo
@@ -229,7 +229,7 @@ class PlayerInterface:
         self.__players[1] = label
         self.__players[1].grid( column=1, row=0, padx=3 )
 
-        path = os.path.join( os.path.dirname( __file__ ), "../src/images/kid_2.png" )
+        path = os.path.join( os.path.dirname( __file__ ), "./images/kid_2.png" )
         photo = ImageTk.PhotoImage( Image.open( path ) )
         label = Label( positions_list[0], image=photo )
         label.image = photo
