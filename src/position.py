@@ -1,9 +1,9 @@
 
 
 class Position:
-    def __init__(self, position_type, widget, image_path):
+    def __init__(self, new_type, widget, image_path):
         super().__init__()
-        self.__position_type = position_type
+        self.__type = new_type
         self.__occupants = []
         # Used for Label
         self.__widget = widget
@@ -28,8 +28,8 @@ class Position:
         return self.__widget
 
     @property
-    def position_type(self):
-        return self.__position_type
+    def type(self):
+        return self.__type
 
     @occupants.setter
     def occupants(self, occupants):

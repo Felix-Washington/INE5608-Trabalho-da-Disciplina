@@ -2,9 +2,11 @@
 
 class Card:
     def __init__(self, questions, answers):
+        # Card is created with 4 questions.
         self.__questions = questions
+        # Card is created with 4 answers for every question.
         self.__answers = answers
-
+        # Card widget size.
         self.__width = 400
         self.__height = 600
 

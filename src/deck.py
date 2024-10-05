@@ -6,15 +6,19 @@ import os
 
 
 class Deck:
-    def __init__(self, widget):
-
+    def __init__(self):
+        # All questions available. Key is id from question, value its description.
         self.__questions = {}
+        # All answers available. Key is id from answers, value its description.
         self.__answers = {}
+        # Key is the type of category, value is a list of answers from that category.
         self.__categories = {}
+        # References question IDs with answer IDs.
         self.__questions_with_answers = {}
+        # Object card that's created when a player interact with deck.
         self.__card = None
+        # Function that create and sort all game data (questions, answers and their references).
         self.create_dicts()
-
 
     def create_card(self, controller):
         answers_card = {}
@@ -52,6 +56,17 @@ class Deck:
         self.__card = Card(questions_card, answers_card)
 
         controller.draw_card(self.__card)
+
+    def create_answers(self, key, controller):
+        self.__card = Card( {key: self.__questions[key]}, self.__card.answers[key])
+        controller.draw_card(self.__card, "answers")
+
+    def check_answer(self, id_question, answer):
+        correct_answer = self.__answers[self.__questions_with_answers[id_question]]
+
+        if correct_answer == answer:
+            return 1
+        return -1
 
     def create_dicts(self):
         # Initial value
@@ -107,8 +122,8 @@ class Deck:
             0: [0, 1, 2, 3, 5, 24, 25, 27, 29, 39],
             1: [6, 7, 8, 9, 10, 11, 26, 37, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58,
                 59, 60, 61],
-            2: [4, 12, 13, 14, 15, 16, 17, 28, 31, 33, 34, 35, 38, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75,
-                76, 77, 78, 80, 81, 82, 83, 84],
+            2: [4, 12, 13, 14, 15, 16, 17, 28, 31, 33, 34, 35, 38, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74,
+                75, 76, 77, 78, 80, 81, 82, 83, 84],
             3: [18, 19, 20, 21, 22, 23, 30, 32, 36, 79, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100,
                 101, 102, 103, 104, 105, 106, 107, 108]
         }
@@ -146,13 +161,3 @@ class Deck:
         # Update dicts with shuffle values
         self.__questions = {new_key: questions[old_key] for new_key, old_key in enumerate( keys )}
         self.__questions_with_answers = {new_key: old_key for new_key, old_key in enumerate( keys )}
-
-    def create_answers(self, key, controller):
-        self.__card = Card( {key: self.__questions[key]}, self.__card.answers[key])
-        controller.draw_card(self.__card, "answers")
-
-    def check_answer(self, id_question, answer, controller):
-        correct_answer = self.__answers[self.__questions_with_answers[id_question]]
-
-        if correct_answer == answer:
-            controller.board.walk_in_board(2)
