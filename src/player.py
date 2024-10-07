@@ -4,7 +4,8 @@ class Player:
         self.__identifier = ''
         self.__name = 'Player'
         self.__image = None
-        self.__winner = False
+        self.__turn = False
+        self.__position_board = 0
 
     def initialize(self, a_name, image, an_id):
         self.reset()
@@ -15,17 +16,28 @@ class Player:
     def reset(self):
         self.__identifier = ""
         self.__name = ""
-        self.__winner = False
+        self.__turn = False
+        self.__position_board = 0
 
     @property
     def identifier(self):
         return self.__identifier
 
-    def get_name(self):
-        return self.__name
+    @property
+    def position_board(self):
+        return self.__position_board
 
-    def get_turn(self):
+    @position_board.setter
+    def position_board(self, position_board):
+        self.__position_board = position_board
+
+    @property
+    def turn(self):
         return self.__turn
+
+    @turn.setter
+    def turn(self, turn):
+        self.__turn = turn
 
     @property
     def image(self):
@@ -38,7 +50,3 @@ class Player:
     @property
     def winner(self):
         return self.__winner
-
-    @winner.setter
-    def winner(self, winner):
-        self.__winner = winner
