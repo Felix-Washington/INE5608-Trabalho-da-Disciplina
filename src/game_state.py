@@ -6,3 +6,5 @@ class Estado(Enum):
     NOT_ENOUGH = 1
     GAME_RUNNING = 2
     END_GAME = 3
+    WAITING_PLAY = 4
+

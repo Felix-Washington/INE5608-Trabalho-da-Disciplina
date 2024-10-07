@@ -45,7 +45,7 @@ class PlayerInterface( DogPlayerInterface ):
         self.__deck_button = None
 
         # Create board instance.
-        self.board = Board()
+        self.__board = Board()
 
         self.load_main_window()
 
@@ -84,7 +84,7 @@ class PlayerInterface( DogPlayerInterface ):
 
     # Function called to process card interface
     def draw_card(self, card, state="questions"):
-        self.update_gui_message( "drew_card" )
+        self.update_gui_message( "drew_card", self.__board.current_player_turn.name )
         # Create window popup for the card
         card_interface = Toplevel()
         card_interface.title( "Carta" )
@@ -110,12 +110,17 @@ class PlayerInterface( DogPlayerInterface ):
                 question_button = Button(
                     card_frame,
                     text=question,
-                    command=lambda key=key: [self.board.deck.create_answers( key, self ), card_interface.destroy()],
+                    command=lambda key=key: [self.__board.deck.create_answers( key, self ), card_interface.destroy()],
                     width=300,
                     height=2,
                     font=('Arial', 12)
                 )
                 question_button.pack( padx=10, pady=10 )
+
+                # If position is not "desafio", it will hide all questions.
+                # if self.__board.positions[self.__board.current_position_board].type < 3:
+                #    question_button.configure(text="?")
+
         # Configuration for answer card
         else:
             card_interface.configure( background='#7ed957' )
@@ -127,7 +132,7 @@ class PlayerInterface( DogPlayerInterface ):
                     card_frame,
                     text=answer,
                     command=lambda answer_=answer: [
-                        self.board.process_board_status( list( question_key )[0], answer_, self ),
+                        self.__board.process_board_status( list( question_key )[0], answer_, self ),
                         end_card( self.__deck_button )], width=300, height=2, font=('Arial', 12) )
                 answer_button.pack( padx=10, pady=10 )
 
@@ -140,11 +145,11 @@ class PlayerInterface( DogPlayerInterface ):
 
     # Set labels to all positions
     def set_positions(self):
-        for i in range( len( self.board.positions ) ):
+        for i in range( len( self.__board.positions ) ):
             position_size = self.__game_size[0] / 10 - 15
 
             # Get position image path.
-            image_path = self.board.positions[i].image
+            image_path = self.__board.positions[i].image
 
             # Verify if path is valid
             if not os.path.isfile( image_path ):
@@ -170,7 +175,7 @@ class PlayerInterface( DogPlayerInterface ):
             position_frame.configure( width=position_size, height=position_size )
 
             # Saving frame in position widget.
-            self.board.positions[i].widget = position_frame
+            self.__board.positions[i].widget = position_frame
 
     def set_hud(self):
         # Show current player turn
@@ -183,7 +188,7 @@ class PlayerInterface( DogPlayerInterface ):
         self.__deck_frame = Frame( self.__hud_frame )
         # Button used to draw a card.
         self.__deck_button = Button( self.__deck_frame, width=15, height=13, text="?",
-                                     command=lambda: self.board.deck.create_card( self ),
+                                     command=lambda: self.__board.deck.create_card( self ),
                                      bg='black', highlightthickness=2, font=48, fg='white' )
 
     # Config to close the window
@@ -194,20 +199,22 @@ class PlayerInterface( DogPlayerInterface ):
         self.__root.mainloop()
 
     # Insert game status to interface log list.
-    def update_gui_message(self, text):
+    def update_gui_message(self, text, player="", player2=""):
         message = ""
         match text:
             case "drew_card":
-                message = "Jogador comprou uma carta."
+                message = f"Jogador {player} comprou uma carta."
             case "draw_card":
                 message = "Compre uma carta."
             case "select_question":
-                message = "Jogador selecionou uma pergunta."
+                message = f"Jogador {player} selecionou uma pergunta."
             case "select_answer":
-                message = "Jogador selecionou uma resposta."
+                message = f"Jogador {player} selecionou uma resposta."
+            case "pending_turn":
+                message = f"Jogador {player} selecionou o jogador {player2} para responder uma pergunta."
 
-        self.__logs_listbox.insert( END, message )
-        self.__logs_listbox.yview( END )
+        self.__logs_listbox.insert( 0, message )
+        self.__logs_listbox.yview( 0 )
 
     # Create Menu item and add its buttons.
     def set_menu(self):
@@ -231,49 +238,70 @@ class PlayerInterface( DogPlayerInterface ):
         else:  # (code=='2')
             players = start_status.get_players()
             local_player_id = start_status.get_local_id()
-            self.board.start_match( players, local_player_id )
-            # game_state = self.board.get_status()
+            self.__board.start_match( players, local_player_id )
+            # game_state = self.__board.get_status()
             # self.update_gui( game_state )
             messagebox.showinfo( message=start_status.get_message() )
+            self.__deck_button['state'] = 'normal'
+            self.update_gui_message( "draw_card" )
+            self.set_positions()
+            self.start_match_widget_packs()
+        self.update_widget_packs()
 
-        self.__deck_button['state'] = 'normal'
-        self.update_gui_message( "draw_card" )
-        self.set_positions()
-        self.start_match_widget_packs()
+    def receive_start(self, start_status):
+        self.start_game()  # use case reset game
+        players = start_status.get_players()
+        local_player_id = start_status.get_local_id()
+        self.__board.start_match( players, local_player_id )
+        # self.update_widget_packs()
+        # game_state = self.__board.get_status()
+        # self.update_gui( game_state )
+
+    def receive_withdrawal_notification(self):
+        self.__board.receive_withdrawal_notification()
+        game_state = self.__board.get_status()
+        # self.update_gui(game_state)
+
+    def start_game(self):
+        pass
+        # match_status = self.__board.get_match_status()
+        # if match_status == 2 or match_status == 6:
+        #    self.__board.reset_game()
+        #    game_state = self.__board.get_status()
+        #    self.update_gui(game_state)
 
     def update_widget_packs(self):
-        # Re draw players in position
-        for i in range( len( self.board.positions ) ):
-            self.board.positions[i].widget.pack_propagate( False )
-            # First widget is Label with position image. If it has more than 1, it means that have players in that
-            # position
-            if len( self.board.positions[i].widget.winfo_children() ):
-                for widget in self.board.positions[i].widget.winfo_children()[1:]:
+        # Destroy all widget from positions except type image.
+        for position in self.__board.positions:
+            position.widget.grid_propagate( False )
+            if len( position.widget.winfo_children() ):
+                for widget in position.widget.winfo_children()[1:]:
                     widget.destroy()
 
-            occupant_row = 0
-            occupant_column = 0
-            for occupant in self.board.positions[i].occupants:
-
-                occupant_image = PhotoImage( file=occupant.image )
-                occupant_label = Label( self.board.positions[i].widget, image=occupant_image, width=10,
-                                        height=10 )
-                occupant_label.grid( row=occupant_row, column=occupant_column, padx=1, pady=1 )
-                occupant_label.image = occupant_image
-                occupant_label.propagate( False )
-                occupant_column += 1
-                if occupant_column >= 2:
-                    occupant_row += 1
-                    occupant_column = 0
+        player_row = 0
+        player_column = 0
+        for i in self.__board.players:
+            player_image = PhotoImage( file=i.image )
+            player_label = Label( self.__board.positions[i.position_board].widget, image=player_image, width=20,
+                                  height=20 )
+            player_label.grid( row=player_row, column=player_column, padx=1, pady=1 )
+            player_label.image = player_image
+            player_column += 1
+            if player_column >= 2:
+                player_row += 1
+                player_column = 0
 
         # Frame that shows current player.
         for i in self.__current_turn.winfo_children():
-            i.configure( text=f'Turno do Jogador: {self.board.players[self.board.current_player_turn].name}.' )
+            i.configure( text=f'Turno do Jogador: {self.__board.current_player_turn.name}.' )
         # Logs block
         self.__logs_frame.grid( row=1, column=0, padx=5, pady=5 )
         self.__logs_listbox.pack( fill='both', expand=True )
         self.__deck_frame.grid( row=0, column=1, rowspan=2, padx=5, pady=5 )
         self.__deck_button.grid( row=0, column=0 )
+
+    def receive_move(self, a_move):
+        pass
 
     # Function that load all wigets in interface when a match has started.
     def start_match_widget_packs(self):
@@ -284,7 +312,7 @@ class PlayerInterface( DogPlayerInterface ):
 
         self.__current_turn.grid( row=0, column=0, padx=5, pady=5, sticky='ew' )
         current_turn_label = Label( self.__current_turn,
-                                    text=f'Turno do Jogador: {self.board.players[self.board.current_player_turn].name}.',
+                                    text=f'Turno do Jogador: {self.__board.current_player_turn.name}.',
                                     fg='white', background='#d95f57',
                                     font=24 )
 
@@ -292,9 +320,9 @@ class PlayerInterface( DogPlayerInterface ):
         row = 0
         column = 0
         reverse = False
-        for i in range( len( self.board.positions ) ):
-            self.board.positions[i].widget.grid( column=column, row=row, pady=5, padx=5 )
-            self.board.positions[i].widget.label.pack_propagate( False )
+        for position in self.__board.positions:
+            position.widget.grid( column=column, row=row, pady=5, padx=5 )
+            position.widget.label.pack_propagate( False )
             if (reverse and column == 0) or (not reverse and column == 9):
                 if row % 2 == 1:
                     reverse = not reverse
@@ -302,22 +330,18 @@ class PlayerInterface( DogPlayerInterface ):
             else:
                 column += -1 if reverse else 1
 
-            # If it has an occupant, add images to interface.
-            if self.board.positions[i].occupants:
-                # Update players position on board.
-                occupant_row = 0
-                occupant_column = 0
-                for occupant in self.board.positions[i].occupants:
-                    occupant_image = PhotoImage( file=occupant.image )
-                    occupant_label = Label( self.board.positions[i].widget, image=occupant_image, width=10,
-                                            height=10 )
-                    occupant_label.grid( row=occupant_row, column=occupant_column, padx=1, pady=1 )
-                    occupant_label.image = occupant_image
-                    occupant_label.propagate( False )
-                    occupant_column += 1
-                    if occupant_column >= 2:
-                        occupant_row += 1
-                        occupant_column = 0
+        player_row = 0
+        player_column = 0
+        for i in self.__board.players:
+            player_image = PhotoImage( file=i.image )
+            player_label = Label( self.__board.positions[i.position_board].widget, image=player_image, width=20,
+                                  height=20 )
+            player_label.grid( row=player_row, column=player_column, padx=1, pady=1 )
+            player_label.image = player_image
+            player_column += 1
+            if player_column >= 2:
+                player_row += 1
+                player_column = 0
 
         # Propagate.
         self.__board_frame.pack_propagate( False )
