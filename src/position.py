@@ -20,6 +20,13 @@ class Position:
     def type(self):
         return self.__type
 
+    def new_type(self, new_type):
+        self.__type = new_type
+
     @property
     def image(self):
         return self.__image
+
+    @image.setter
+    def image(self, image):
+        self.__image = image

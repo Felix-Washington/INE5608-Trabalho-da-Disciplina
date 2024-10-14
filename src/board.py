@@ -23,7 +23,7 @@ class Board:
         self.__tile_amount = 30
         self.__positions = []
         self.__winner = None
-        self.__match_status = 0
+        self.__match_status = 0  # 0 - Start game 1 - Game running
         self.__selected_player = -1
         self.__current_player_turn = -1
         # Position that the current player is on.
@@ -62,9 +62,46 @@ class Board:
         # Set game state to GAME_RUNNING.
         self.__match_status = 2
         # Create board positions.
-        self.set_positions()
+        self.set_positions_types()
 
-    def set_positions(self):
+    def start_game(self, start_config):
+        players_order = []
+        count_image = 0
+        for player_order_id in start_config["turn_order"]:
+            for player in self.__players:
+                if player[1] == player_order_id:
+                    player_name = player[0]
+                    player_id = player[1]
+                    player_image = f"images/kid_{count_image}.png"
+
+                    new_player = Player()
+                    new_player.initialize( player_name, player_image, player_id )
+                    players_order.append( new_player )
+                    count_image += 1
+                    if player_order_id == self.__local_player:
+                        self.__local_player = Player().initialize( player_name, player_image, player_id )
+                    elif self.remote_player1 is None:
+                        self.remote_player1 = Player().initialize( player_name, player_image, player_id )
+
+                    if player_order_id == start_config["current_player"]:
+                        self.__current_player_turn = new_player
+                    break
+
+        self.__players = players_order
+
+        self.set_positions( start_config["positions"] )
+
+    def set_positions_types(self):
+        position_type_list = []
+        for i in range( self.__tile_amount + 2 ):
+            new_type = int( random.uniform( 1, 4 ) )
+            position_type_list.append( new_type )
+
+        position_type_list[0] = 1
+        position_type_list[self.__tile_amount + 1] = 0
+        self.set_positions( position_type_list )
+
+    def set_positions(self, position_type_list):
         position_types = {
             0: "fim.png",
             1: "simples.png",
@@ -72,21 +109,29 @@ class Board:
             3: "desafio.png",
         }
 
-        for i in range( self.__tile_amount + 2 ):
-            # If reached last position, set the final position of the board.
-            if i != 0 and i <= self.__tile_amount:
-                number = int( random.uniform( 1, 4 ) )
-            elif i == 0:
-                number = 1
-            else:
-                number = 0
+        for new_type in position_type_list:
+            image_path = os.path.join( os.path.dirname( __file__ ), "./images/" + position_types[new_type] )
+            new_position = Position( new_type, None, image_path )
+            self.__positions.append( new_position )
 
-            image_path = os.path.join( os.path.dirname( __file__ ), "./images/" + position_types[number] )
+        for p in self.__positions:
+            print( p )
 
-            # Create positions with widget None. It will be set in player_interface.
-            self.__positions.append( Position( number, None, image_path ) )
+    def get_start_match_data(self):
+        position_types = []
+        for position in self.__positions:
+            position_types.append( position.type )
+
+        turn_order = []
+        for player in self.__players:
+            turn_order.append( player.identifier )
+
+        current_player = self.__current_player_turn.identifier
+        status = self.__match_status
+        return position_types, turn_order, current_player, status
 
     def process_board_status(self, id_question, answer, controller):
+
         # 1 - Correct / -1 - Wrong
         result = self.__deck.check_answer( id_question, answer )
         # Get position type from who asks.
@@ -126,6 +171,7 @@ class Board:
                     # Set result to selected player.
                     player.position_board += walk_value
 
+        controller.update_gui_message( "select_answer", self.__.current_player_turn.name )
         controller.update_widget_packs()
 
     def receive_withdrawal_notification(self):
@@ -166,6 +212,18 @@ class Board:
     @property
     def players(self):
         return self.__players
+
+    @players.setter
+    def players(self, players):
+        self.__players = players
+
+    @property
+    def local_player(self):
+        return self.__local_player
+
+    @local_player.setter
+    def local_player(self, local_player):
+        self.__local_player = local_player
 
     @property
     def positions(self):

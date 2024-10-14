@@ -84,7 +84,6 @@ class PlayerInterface( DogPlayerInterface ):
 
     # Function called to process card interface
     def draw_card(self, card, state="questions"):
-        self.update_gui_message( "drew_card", self.__board.current_player_turn.name )
         # Create window popup for the card
         card_interface = Toplevel()
         card_interface.title( "Carta" )
@@ -102,6 +101,7 @@ class PlayerInterface( DogPlayerInterface ):
 
         # Configuration for question card
         if state == "questions":
+            self.update_gui_message( "drew_card", self.__board.current_player_turn.name )
             card_interface.configure( background='#ffbd59' )
             card_frame = Frame( card_interface, background='#ffbd59' )
             card_title = Label( card_interface, text='Escolha uma pergunta!', width=300, height=8 )
@@ -123,6 +123,7 @@ class PlayerInterface( DogPlayerInterface ):
 
         # Configuration for answer card
         else:
+            update_gui_message( "select_question", self.__board.current_player_turn.name )
             card_interface.configure( background='#7ed957' )
             card_frame = Frame( card_interface, bg='#7ed957' )
             question_key = card.questions.keys()
@@ -245,15 +246,19 @@ class PlayerInterface( DogPlayerInterface ):
             self.__deck_button['state'] = 'normal'
             self.update_gui_message( "draw_card" )
             self.set_positions()
+
+            position_types, turn_order, current_player, status = self.__board.get_start_match_data()
+            move_to_send = {"positions": position_types, "turn_order": turn_order, "current_player": current_player,
+                            "game_status": status, "match_status": "next"}
+            self.dog_server_interface.send_move( move_to_send )
             self.start_match_widget_packs()
         self.update_widget_packs()
 
     def receive_start(self, start_status):
-        self.start_game()  # use case reset game
         players = start_status.get_players()
         local_player_id = start_status.get_local_id()
-        self.__board.start_match( players, local_player_id )
-        # self.update_widget_packs()
+        self.__board.players = players
+        self.__board.local_player = local_player_id
         # game_state = self.__board.get_status()
         # self.update_gui( game_state )
 
@@ -301,7 +306,15 @@ class PlayerInterface( DogPlayerInterface ):
         self.__deck_button.grid( row=0, column=0 )
 
     def receive_move(self, a_move):
-        pass
+        if a_move["status"] == 0:
+            self.__board.start_game(a_move)
+            self.set_positions()
+            self.start_match_widget_packs()
+        if a_move["current_player"] == self.__board.local_player:
+            self.__deck_button['state'] = 'normal'
+
+        self.update_widget_packs()
+
 
     # Function that load all wigets in interface when a match has started.
     def start_match_widget_packs(self):
@@ -351,7 +364,6 @@ class PlayerInterface( DogPlayerInterface ):
 
         current_turn_label.pack( fill="both", expand=True, padx=5, pady=5 )
         # Calls the function to avoid duplication.
-        # self.update_widget_packs()
 
         self.__logs_frame.grid( row=1, column=0, padx=5, pady=5 )
         self.__logs_listbox.pack( fill='both', expand=True )
