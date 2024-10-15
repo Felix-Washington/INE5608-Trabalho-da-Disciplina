@@ -161,7 +161,7 @@ class Deck:
         }
         # Shuffle keys
         keys = list( questions.keys() )
-        random.shuffle( keys )
+        #random.shuffle( keys )
 
         # Update dicts with shuffle values
         self.__questions = {new_key: questions[old_key] for new_key, old_key in enumerate( keys )}

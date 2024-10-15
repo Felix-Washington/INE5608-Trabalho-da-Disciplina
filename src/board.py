@@ -47,6 +47,7 @@ class Board:
         # player_c_image = f"images/kid_{2}.png"
 
         self.__local_player.initialize( player_a_name, player_a_image, player_a_id )
+        player1 = Player()
         player1.initialize( player_b_name, player_b_image, player_b_id )
         # player2.initialize( player_c_name, player_c_image, player_c_id )
 
@@ -82,7 +83,8 @@ class Board:
 
                     # Create local player by id.
                     if player_order_id == self.__local_player:
-                        self.__local_player = Player().initialize( player_name, player_image, player_id )
+                        self.__local_player = Player()
+                        self.__local_player.initialize( player_name, player_image, player_id )
                         players_order.append( self.__local_player )
                     else:
                         new_player = Player()

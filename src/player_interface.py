@@ -198,6 +198,7 @@ class PlayerInterface( DogPlayerInterface ):
                 self.update_gui_message( "select_answer", self.__board.current_player_turn.name )
                 self.update_widget_packs()
 
+                position_types, turn_order, current_player, status = self.__board.get_start_match_data()
                 move_to_send = {"positions": position_types, "turn_order": turn_order, "current_player": current_player,
                                 "game_status": status, "match_status": "next"}
                 # Send first move to all players.
