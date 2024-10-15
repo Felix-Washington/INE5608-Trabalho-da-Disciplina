@@ -15,21 +15,18 @@ class Board:
 
         # Players
         self.__local_player = Player()
-        self.remote_player1, self.remote_player2 = Player(), Player()
-        self.remote_player2.initialize( 2, "images/kid_2.png", "Player 2" )
         self.__players = []
 
         # Board attributes
         self.__tile_amount = 30
         self.__positions = []
         self.__winner = None
-        self.__match_status = 0  # 0 - Start game 1 - Game running
+        self.__match_status = 0  # 0 - Start game / 1 - Waiting player move / 2 - Active play
         self.__selected_player = -1
         self.__current_player_turn = -1
         # Position that the current player is on.
         self.__current_position_board = -1
         self.__temporary_turn = False
-        self.__match_status = 0
 
         self.__deck = Deck()
 
@@ -50,45 +47,54 @@ class Board:
         # player_c_image = f"images/kid_{2}.png"
 
         self.__local_player.initialize( player_a_name, player_a_image, player_a_id )
-        self.remote_player1.initialize( player_b_name, player_b_image, player_b_id )
-        # self.remote_player2.initialize( player_c_name, player_c_image, player_c_id )
+        player1.initialize( player_b_name, player_b_image, player_b_id )
+        # player2.initialize( player_c_name, player_c_image, player_c_id )
 
-        self.__players = [self.__local_player, self.remote_player1]
+        self.__players = [self.__local_player, player1]
         random.shuffle( self.__players )
+
         # Set player turn.
         self.__players[0].turn = True
         self.__current_player_turn = self.__players[0]
 
-        # Set game state to GAME_RUNNING.
-        self.__match_status = 2
+        if self.__current_player_turn.identifier == self.__local_player.identifier:
+            self.__local_player = self.__current_player_turn
+
         # Create board positions.
         self.set_positions_types()
 
     def start_game(self, start_config):
+        # Aux used because self.__player initially has data.
         players_order = []
         count_image = 0
+
+        # Creates players in the same order they were initially created.
         for player_order_id in start_config["turn_order"]:
+            # Initially self.__players is a list with name, id and order data.
             for player in self.__players:
+                # [0] get name from player / [1] get id from player.
                 if player[1] == player_order_id:
                     player_name = player[0]
                     player_id = player[1]
                     player_image = f"images/kid_{count_image}.png"
 
-                    new_player = Player()
-                    new_player.initialize( player_name, player_image, player_id )
-                    players_order.append( new_player )
                     count_image += 1
+
+                    # Create local player by id.
                     if player_order_id == self.__local_player:
                         self.__local_player = Player().initialize( player_name, player_image, player_id )
-                    elif self.remote_player1 is None:
-                        self.remote_player1 = Player().initialize( player_name, player_image, player_id )
+                        players_order.append( self.__local_player )
+                    else:
+                        new_player = Player()
+                        new_player.initialize( player_name, player_image, player_id )
+                        players_order.append( new_player )
 
-                    if player_order_id == start_config["current_player"]:
-                        self.__current_player_turn = new_player
-                    break
+                        if player_order_id == start_config["current_player"]:
+                            self.__current_player_turn = new_player
 
+        # Setting players objects.
         self.__players = players_order
-
+        # Call a function to create board positions.
         self.set_positions( start_config["positions"] )
 
     def set_positions_types(self):
@@ -101,6 +107,7 @@ class Board:
         position_type_list[self.__tile_amount + 1] = 0
         self.set_positions( position_type_list )
 
+    # Create position objects.
     def set_positions(self, position_type_list):
         position_types = {
             0: "fim.png",
@@ -114,9 +121,7 @@ class Board:
             new_position = Position( new_type, None, image_path )
             self.__positions.append( new_position )
 
-        for p in self.__positions:
-            print( p )
-
+    # Get all neccessary data to start a match.
     def get_start_match_data(self):
         position_types = []
         for position in self.__positions:
@@ -130,8 +135,11 @@ class Board:
         status = self.__match_status
         return position_types, turn_order, current_player, status
 
-    def process_board_status(self, id_question, answer, controller):
+    def check_board_status(self, id_question):
+        pass
 
+    # Process all moves made from players.
+    def process_board_status(self, id_question, answer):
         # 1 - Correct / -1 - Wrong
         result = self.__deck.check_answer( id_question, answer )
         # Get position type from who asks.
@@ -171,9 +179,6 @@ class Board:
                     # Set result to selected player.
                     player.position_board += walk_value
 
-        controller.update_gui_message( "select_answer", self.__.current_player_turn.name )
-        controller.update_widget_packs()
-
     def receive_withdrawal_notification(self):
         self.__match_status = 6  # match abandoned by opponent
 
@@ -187,6 +192,9 @@ class Board:
                 self.__current_player_turn = self.__players[next_index]
                 break
 
+    def update_board_position(self):
+        self.__current_position_board = self.__positions[self.__current_player_turn.position_board].type
+
     def reset_game(self):
         pass
 
@@ -198,12 +206,13 @@ class Board:
     def deck(self, deck):
         self.__deck = deck
 
-    def get_status(self):
-        pass
-
     @property
     def match_status(self):
         return self.__match_status
+
+    @match_status.setter
+    def match_status(self, match_status):
+        self.__match_status = match_status
 
     @property
     def current_player_turn(self):
@@ -232,3 +241,11 @@ class Board:
     @property
     def current_position_board(self):
         return self.__current_position_board
+
+    @property
+    def temporary_turn(self):
+        return self.__temporary_turn
+
+    @temporary_turn.setter
+    def temporary_turn(self, temporary_turn):
+        self.__temporary_turn = temporary_turn

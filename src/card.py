@@ -1,18 +1,33 @@
 
 
 class Card:
-    def __init__(self, questions, answers):
-        # Card is created with 4 questions.
-        self.__questions = questions
-        # Card is created with 4 answers for every question.
-        self.__answers = answers
+    def __init__(self, options, question=-1):
+        # Current selected question.
+        self.__question = question
+
         # Card widget size.
         self.__width = 400
         self.__height = 600
+        # Card is created with 4 options.
+        self.__options = options
+
+
 
     @property
-    def questions(self):
-        return self.__questions
+    def question(self):
+        return self.__question
+
+    @question.setter
+    def question(self, question):
+        self.__question = question
+
+    @property
+    def options(self):
+        return self.__options
+
+    @options.setter
+    def options(self, options):
+        self.__options = options
 
     @property
     def width(self):
@@ -22,6 +37,4 @@ class Card:
     def height(self):
         return self.__height
 
-    @property
-    def answers(self):
-        return self.__answers
+

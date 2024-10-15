@@ -1,4 +1,3 @@
-
 import random
 from card import Card
 
@@ -20,7 +19,9 @@ class Deck:
         # Function that create and sort all game data (questions, answers and their references).
         self.create_dicts()
 
-    def create_card(self, controller):
+        self.__card_current_answers = {}
+
+    def create_card(self):
         answers_card = {}
 
         # Get current questions
@@ -52,21 +53,25 @@ class Deck:
             random.shuffle( all_answers )
 
             answers_card[question_key] = all_answers
+        self.__card_current_answers = answers_card
+        self.__card = Card( questions_card )
 
-        self.__card = Card(questions_card, answers_card)
+        # controller.draw_card( self.__card )
 
-        controller.draw_card(self.__card)
+    def create_answers(self, key):
+        self.__card = Card( self.__card_current_answers[key], key )
 
-    def create_answers(self, key, controller):
-        self.__card = Card( {key: self.__questions[key]}, self.__card.answers[key])
-        controller.draw_card(self.__card, "answers")
+        # controller.draw_card( self.__card, "answers" )
 
     def check_answer(self, id_question, answer):
-        correct_answer = self.__answers[self.__questions_with_answers[id_question]]
 
+        correct_answer = self.__answers[self.__questions_with_answers[self.__card.question]]
         if correct_answer == answer:
             return 1
         return -1
+
+    def get_question(self, question_id=-1):
+        return self.__questions[self.__card.question]
 
     def create_dicts(self):
         # Initial value
@@ -98,7 +103,7 @@ class Deck:
         }
 
         self.__answers = {
-            0: "Azul", 1: "Branco", 2: "Amarelo", 3: "Preto", 4: "Russia",  5: "Roxo",
+            0: "Azul", 1: "Branco", 2: "Amarelo", 3: "Preto", 4: "Russia", 5: "Roxo",
             6: "Tucano", 7: "Caranguejo", 8: "Pirarucu", 9: "Zebra", 10: "Cachorro", 11: "Baleia",
             12: "Rio de Janeiro", 13: "Haiti", 14: "Japão", 15: "Monte Fuji", 16: "Pico da Neblina", 17: "Acre",
             18: "1500", 19: "1889", 20: "1822", 21: "1904", 22: "1903", 23: "1832",
@@ -161,3 +166,7 @@ class Deck:
         # Update dicts with shuffle values
         self.__questions = {new_key: questions[old_key] for new_key, old_key in enumerate( keys )}
         self.__questions_with_answers = {new_key: old_key for new_key, old_key in enumerate( keys )}
+
+    @property
+    def card(self):
+        return self.__card
