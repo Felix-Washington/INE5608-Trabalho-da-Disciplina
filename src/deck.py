@@ -56,15 +56,10 @@ class Deck:
         self.__card_current_answers = answers_card
         self.__card = Card( questions_card )
 
-        # controller.draw_card( self.__card )
-
     def create_answers(self, key):
         self.__card = Card( self.__card_current_answers[key], key )
 
-        # controller.draw_card( self.__card, "answers" )
-
-    def check_answer(self, id_question, answer):
-
+    def check_answer(self, answer):
         correct_answer = self.__answers[self.__questions_with_answers[self.__card.question]]
         if correct_answer == answer:
             return 1
@@ -161,7 +156,7 @@ class Deck:
         }
         # Shuffle keys
         keys = list( questions.keys() )
-        #random.shuffle( keys )
+        # random.shuffle( keys )
 
         # Update dicts with shuffle values
         self.__questions = {new_key: questions[old_key] for new_key, old_key in enumerate( keys )}

@@ -1,5 +1,3 @@
-
-
 class Card:
     def __init__(self, options, question=-1):
         # Current selected question.
@@ -10,8 +8,6 @@ class Card:
         self.__height = 600
         # Card is created with 4 options.
         self.__options = options
-
-
 
     @property
     def question(self):
@@ -36,5 +32,3 @@ class Card:
     @property
     def height(self):
         return self.__height
-
-

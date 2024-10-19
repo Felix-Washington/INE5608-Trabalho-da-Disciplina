@@ -1,11 +1,11 @@
 class Player:
     def __init__(self):
         self.__identifier = ''
-        self.__name = 'Player'
+        self.__name = 'Jogador'
         self.__image = None
         self.__turn = False
         self.__position_board = 0
-        self.__option = -1
+        self.__selected_player = -1
         self.__selected_question = -1
         self.__selected_answer = -1
 
@@ -20,6 +20,14 @@ class Player:
         self.__name = ""
         self.__turn = False
         self.__position_board = 0
+
+    def reset_turn(self):
+        self.__selected_player = -1
+        self.__selected_question = -1
+        self.__selected_answer = -1
+
+    def get_player_data(self):
+        return [self.__position_board, self.__turn, self.__selected_player, self.__selected_question, self.__selected_answer]
 
     @property
     def identifier(self):
@@ -54,12 +62,12 @@ class Player:
         return self.__winner
 
     @property
-    def option(self):
-        return self.__option
+    def selected_player(self):
+        return self.__selected_player
 
-    @option.setter
-    def option(self, option):
-        self.__option = option
+    @selected_player.setter
+    def selected_player(self, selected_player):
+        self.__selected_player = selected_player
 
     @property
     def selected_question(self):
