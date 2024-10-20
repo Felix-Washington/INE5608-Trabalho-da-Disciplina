@@ -2,18 +2,19 @@ class Player:
     def __init__(self):
         self.__identifier = ''
         self.__name = 'Jogador'
-        self.__image = None
+        self.__image = ""
         self.__turn = False
         self.__position_board = 0
         self.__selected_player = -1
         self.__selected_question = -1
         self.__selected_answer = -1
 
-    def initialize(self, a_name, image, an_id):
+    def initialize(self, a_name, image, an_id, turn=False):
         self.reset()
         self.__name = a_name
         self.__image = image
         self.__identifier = an_id
+        self.__turn = turn
 
     def reset(self):
         self.__identifier = ""

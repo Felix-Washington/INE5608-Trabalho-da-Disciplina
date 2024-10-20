@@ -11,7 +11,7 @@ class Deck:
         # All answers available. Key is id from answers, value its description.
         self.__answers = {}
         # Key is the type of category, value is a list of answers from that category.
-        self.__categories = {}
+        self.__categories_answers = {}
         # References question IDs with answer IDs.
         self.__questions_with_answers = {}
         # Object card that's created when a player interact with deck.
@@ -22,51 +22,65 @@ class Deck:
         self.__card_current_answers = {}
 
     def create_card(self):
-        answers_card = {}
-
         # Get current questions
         questions_current_list = random.sample( list( self.__questions.keys() ), k=4 )
-        questions_card = {key: self.__questions[key] for key in questions_current_list}
 
         # Create options for every question
         for question_key in questions_current_list:
-            # Obter a resposta correta
+            # Get correct answer id.
             correct_answer_id = self.__questions_with_answers[question_key]
-            correct_answer = self.__answers[correct_answer_id]
-            # Determine the answer correct category
+
+            # Determine the category by correct answers from selected question.
             category = None
-            for cat_key, answer_ids in self.__categories.items():
+            for cat_key, answer_ids in self.__categories_answers.items():
                 if correct_answer_id in answer_ids:
                     category = cat_key
                     break
 
             # Get answers from same category
-            possible_answers_ids = self.__categories[category]
+            possible_answers_ids = self.__categories_answers[category]
 
             # Select 3 false answers
             false_answers_ids = random.sample(
                 [ans_id for ans_id in possible_answers_ids if ans_id != correct_answer_id], k=3 )
-            false_answers = [self.__answers[ans_id] for ans_id in false_answers_ids]
 
-            # Merge all answers
-            all_answers = false_answers + [correct_answer]
-            random.shuffle( all_answers )
+            # Merge all answers ids.
+            all_answers_ids = false_answers_ids + [correct_answer_id]
+            random.shuffle( all_answers_ids )
 
-            answers_card[question_key] = all_answers
-        self.__card_current_answers = answers_card
-        self.__card = Card( questions_card )
+            # Create a dict with its key, question id, and its value a list of answers.
+            self.__card_current_answers[question_key] = all_answers_ids
 
-    def create_answers(self, key):
-        self.__card = Card( self.__card_current_answers[key], key )
+        self.__card = Card( questions_current_list )
+
+    def create_card_options(self, data_type, data_id):
+        if data_type == "create_questions":
+            self.create_card()
+        elif data_type == "create_answers":
+            # If type = answers, data_id will be a key from a selected question.
+            self.__card = Card( self.__card_current_answers[data_id], data_id )
+        else:
+            # If type = players, data_id will be a list of players ids.
+            self.__card = Card( data_id )
 
     def check_answer(self, answer):
-        correct_answer = self.__answers[self.__questions_with_answers[self.__card.question]]
+        correct_answer = self.__questions_with_answers[self.__card.question]
+
         if correct_answer == answer:
             return 1
         return -1
 
-    def get_question(self, question_id=-1):
-        return self.__questions[self.__card.question]
+    def get_card_option_text(self, text_type, position_board=1, data_id=-1):
+        if text_type == "question_title":
+            return self.__questions[self.__card.question]
+        elif text_type == "create_questions":
+            # Set to 5 just for testing.
+            if position_board > 5:
+                return "?"
+            else:
+                return self.__questions[data_id]
+        elif text_type == "create_answers":
+            return self.__answers[data_id]
 
     def create_dicts(self):
         # Initial value
@@ -118,7 +132,7 @@ class Deck:
             102: "2003", 103: "1703", 104: "1603", 105: "1932", 106: "1732", 107: "1632", 108: "1532"
         }
         # Types: 0 = Colors, 1 = Animals, 2 = Locations, 3 = Dates
-        self.__categories = {
+        self.__categories_answers = {
             0: [0, 1, 2, 3, 5, 24, 25, 27, 29, 39],
             1: [6, 7, 8, 9, 10, 11, 26, 37, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58,
                 59, 60, 61],
@@ -165,3 +179,11 @@ class Deck:
     @property
     def card(self):
         return self.__card
+
+    @property
+    def card_current_answers(self):
+        return self.__card_current_answers
+
+    @card_current_answers.setter
+    def card_current_answers(self, card_current_answers):
+        self.__card_current_answers = card_current_answers

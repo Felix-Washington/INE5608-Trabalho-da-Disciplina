@@ -10,103 +10,85 @@ from deck import Deck
 
 class Board:
     def __init__(self):
-        # Project attributes
         super().__init__()
 
-        # Players
+        # Object from local Player.
         self.__local_player = Player()
+        # List of objects "Player".
         self.__players = []
+        # Deck that manage cards.
+        self.__deck = Deck()
 
         # Board attributes
         self.__tile_amount = 30
+        # A list of objects "Position".
         self.__positions = []
-        self.__winner = None
-        self.__game_status = 0  # 0 - Start game / 1 - Waiting player move / 2 - End play / 3 - Temporary play / 4 - End temporary play
+        # 0 - Start game / 1 - Waiting player move / 2 - End play / 3 - Temporary play / 4 - End temporary play
+        self.__game_status = 0
+        # ID from player on current turn.
         self.__current_player_turn = -1
         # Position that the current player is on.
         self.__current_position_board = -1
 
-        self.__deck = Deck()
-
     def start_match(self, players, local_id):
-        # Load configs from player 1.
-        player_a_name = players[0][0]
-        player_a_id = players[0][1]
-        player_a_image = f"images/kid_{0}.png"
+        # 0 - Name , 1 - ID , 2 - Connection order.
+        for player in players:
+            new_player_name = player[0]
+            new_player_id = player[1]
+            new_player_image = f"images/kid_{player[2]}.png"
 
-        # Load configs from player 2.
-        player_b_name = players[1][0]
-        player_b_id = players[1][1]
-        player_b_image = f"images/kid_{1}.png"
+            if new_player_id == local_id:
+                self.__local_player.initialize( new_player_name, new_player_image, new_player_id )
 
-        # Load configs from player 3.
-        # player_c_name = players[2][0]
-        # player_c_id = players[2][1]
-        # player_c_image = f"images/kid_{2}.png"
+            new_player = Player()
+            new_player.initialize( new_player_name, new_player_image, new_player_id )
 
-        self.__local_player.initialize( player_a_name, player_a_image, player_a_id )
-        player1 = Player()
-        player1.initialize( player_b_name, player_b_image, player_b_id )
-        # player2.initialize( player_c_name, player_c_image, player_c_id )
+            self.__players.append( new_player )
 
-        self.__players = [self.__local_player, player1]
         random.shuffle( self.__players )
 
         # Set player turn.
         self.__players[0].turn = True
         self.__current_player_turn = self.__players[0].identifier
 
-        # if self.__current_player_turn.identifier == self.__local_player.identifier:
-        #    self.__local_player = self.__current_player_turn
-
         # Create board positions.
         self.set_positions_types()
 
+    # Get all data from first receive move and create all objects based on information received.
     def start_game(self, start_config):
-        # Aux used because self.__player initially has data.
-        players_order = []
-        count_image = 0
-
         # Creates players in the same order they were initially created.
-        for player_order_id in start_config["players"]:
-            # Initially self.__players is a list with name, id and order data.
-            for player in self.__players:
-                # [0] get name from player / [1] get id from player.
-                if player[1] == player_order_id:
-                    player_name = player[0]
-                    player_id = player[1]
-                    player_image = f"images/kid_{count_image}.png"
+        for player_id, player_data in start_config["players"].items():
+            new_player = Player()
 
-                    count_image += 1
+            # Set local player.
+            if player_id == self.__local_player:
+                self.__local_player = new_player
+                self.__local_player.initialize( player_data[0], player_data[1], player_id, player_data[2] )
 
-                    # Create local player by id.
-                    if player_order_id == self.__local_player:
-                        self.__local_player = Player()
-                        self.__local_player.initialize( player_name, player_image, player_id )
-                        players_order.append( self.__local_player )
-                    else:
-                        new_player = Player()
-                        new_player.initialize( player_name, player_image, player_id )
-                        players_order.append( new_player )
+            new_player.initialize( player_data[0], player_data[1], player_id, player_data[2] )
+            self.__players.append( new_player )
 
-        self.__current_player_turn = start_config["current_player"]
-        # Setting players objects.
-        self.__players = players_order
+            # Set player of the current turn.
+            if new_player.turn:
+                self.__current_player_turn = new_player.identifier
+
         # Call a function to create board positions.
-        self.__game_status = 1
         self.set_positions( start_config["positions"] )
+        self.__game_status = 1
 
+    # Create a list of type positions.
     def set_positions_types(self):
         position_type_list = []
         for i in range( self.__tile_amount + 2 ):
             new_type = int( random.uniform( 1, 4 ) )
             position_type_list.append( new_type )
 
-        position_type_list[0] = 1
+        position_type_list[0] = 2
         position_type_list[self.__tile_amount + 1] = 0
+        # Call a function to create position objects.
         self.set_positions( position_type_list )
 
-    # Create position objects.
+    # Create position objects with position types.
     def set_positions(self, position_type_list):
         position_types = {
             0: "fim.png",
@@ -120,30 +102,20 @@ class Board:
             new_position = Position( new_type, None, image_path )
             self.__positions.append( new_position )
 
-    # Get all neccessary data to start a match.
-    def get_start_match_data(self):
-        position_types = []
-        for position in self.__positions:
-            position_types.append( position.type )
-
-        players = []
+    def get_move_to_send(self):
+        players = {}
+        card_question = -1
         for player in self.__players:
-            players.append( player.identifier )
+            players[player.identifier] = player.get_player_data()
+            if player.selected_question != -1:
+                card_question = player.selected_question
 
-        current_player = self.__current_player_turn
-        status = self.__game_status
-        return position_types, players, current_player, status
+        move_to_send = {"players": players, "current_player": self.__current_player_turn,
+                        "game_status": self.__game_status,
+                        "card_question": card_question, "card_answers": self.__deck.card_current_answers,
+                        "position_type": self.__current_position_board, "match_status": "next"}
 
-    def get_updated_data(self):
-        players = []
-        for player in self.__players:
-            players.append( {player.identifier: player.get_player_data()} )
-
-        return players, self.__current_player_turn, self.__game_status, self.__deck.card.question, \
-               self.__deck.card.options, self.__current_position_board
-
-    def check_board_status(self, id_question):
-        pass
+        return move_to_send
 
     # Process all moves made from players.
     def process_board_status(self):
@@ -201,9 +173,10 @@ class Board:
     def update_board_position(self):
         self.__current_position_board = self.__positions[self.get_current_player_data( "position_board" )].type
 
-    def update_board_data(self, move):
+    # Update all data received from receive move made from another player.
+    def update_received_data(self, move):
         for player in self.__players:
-            for key, data in move["players"][0].items():
+            for key, data in move["players"].items():
                 if player.identifier == key:
                     player.position_board = data[0]
                     player.turn = data[1]
@@ -212,11 +185,20 @@ class Board:
                     player.selected_answer = data[4]
 
                 if data[2] == self.local_player.identifier:
+                    self.__local_player.selected_question = data[3]
                     self.__local_player.turn = True
 
+                # Update local player.
+                if player.identifier == self.__local_player.identifier:
+                    self.__local_player = player
+
+        # Convert all keys from string to int.
+        move["card_answers"] = {int( key ): value for key, value in move["card_answers"].items()}
+
+        self.__deck.card_current_answers = move["card_answers"]
+
         if move["game_status"] == 3:
-            self.__deck.card.question = move["card_question"]
-            self.__deck.card.options = move["card_answers"]
+            self.__deck.create_card_options( "create_answers", move["card_question"])
             self.__current_position_board = move["position_type"]
 
         self.__current_player_turn = move["current_player"]
@@ -229,8 +211,26 @@ class Board:
                 elif data_type == "position_board":
                     return player.position_board
 
-    def reset_game(self):
-        pass
+    def get_card_information(self, text_type, data_id):
+        if text_type == "create_players":
+            for player in self.__players:
+                if player.identifier == data_id:
+                    return player.name
+        else:
+            return self.__deck.get_card_option_text( text_type, self.__current_position_board, data_id )
+
+    # Get all neccessary data to start a match.
+    def get_start_match_data(self):
+        position_types = []
+        for position in self.__positions:
+            position_types.append( position.type )
+
+        players_ids = {}
+        for player in self.__players:
+            players_ids[player.identifier] = [player.name, player.image, player.turn]
+
+        move_to_send = {"positions": position_types, "players": players_ids, "game_status": 0, "match_status": "next"}
+        return move_to_send
 
     @property
     def deck(self):
