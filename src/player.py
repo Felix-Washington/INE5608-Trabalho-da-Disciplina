@@ -8,6 +8,7 @@ class Player:
         self.__selected_player = -1
         self.__selected_question = -1
         self.__selected_answer = -1
+        self.__time_answered = 0
 
     def initialize(self, a_name, image, an_id, turn=False):
         self.reset()
@@ -28,11 +29,16 @@ class Player:
         self.__selected_answer = -1
 
     def get_player_data(self):
-        return [self.__position_board, self.__turn, self.__selected_player, self.__selected_question, self.__selected_answer]
+        return [self.__position_board, self.__turn, self.__selected_player, self.__selected_question,
+                self.__selected_answer, self.__time_answered]
 
     @property
     def identifier(self):
         return self.__identifier
+
+    @identifier.setter
+    def identifier(self, identifier):
+        self.__identifier = identifier
 
     @property
     def position_board(self):
@@ -85,3 +91,11 @@ class Player:
     @selected_answer.setter
     def selected_answer(self, selected_answer):
         self.__selected_answer = selected_answer
+
+    @property
+    def time_answered(self):
+        return self.__time_answered
+
+    @time_answered.setter
+    def time_answered(self, time_answered):
+        self.__time_answered = time_answered

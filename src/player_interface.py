@@ -102,7 +102,7 @@ class PlayerInterface( DogPlayerInterface ):
             self.dog_server_interface.send_move( self.__board.get_start_match_data() )
 
             # Set game state to Waiting player move.
-            self.__board.game_status = 1
+            #self.__board.game_status = 1
 
             self.prepare_current_move()
             self.update_widget_packs()
@@ -165,9 +165,8 @@ class PlayerInterface( DogPlayerInterface ):
             self.draw_card( card_type )
 
         elif card_type == "create_answers":
-            if self.__board.current_position_board != 3:
-                self.__board.local_player.selected_question = selected_option
-            else:
+            self.__board.local_player.selected_question = selected_option
+            if self.__board.current_position_board == 3:
                 card_type = "create_players"
                 selected_option = []
                 for player in self.__board.players:
@@ -179,19 +178,20 @@ class PlayerInterface( DogPlayerInterface ):
 
         # Run when player has selected an answer.
         elif card_type == "selected_an_answer":
-            if self.__board.current_position_board == 1:
+            self.__board.local_player.selected_answer = selected_option
+            if self.__board.game_status == 3:
+                self.__board.game_status = 4
+            elif self.__board.current_position_board == 1:
                 self.__board.game_status = 2
             elif self.__board.current_position_board == 2:
                 card_type = "create_players"
                 selected_option = []
                 for player in self.__board.players:
                     if player.identifier != self.__board.local_player.identifier:
-                        selected_option.append(player.identifier)
+                        selected_option.append( player.identifier )
 
                 self.__board.deck.create_card_options( card_type, selected_option )
                 self.draw_card( card_type )
-
-            self.__board.local_player.selected_answer = selected_option
 
         # Run when player select another player
         elif card_type == "selected_a_player":
@@ -200,34 +200,25 @@ class PlayerInterface( DogPlayerInterface ):
 
         # Check if a play has finished.
         if self.__board.game_status == 2 or self.__board.game_status == 4:
+
             self.__board.process_board_status()
             self.__board.update_turn()
 
-        self.update_widget_packs()
+        if self.__board.game_status == 4:
+            self.prepare_current_move()
+
         # Check if game status is not waiting for a player do his move.
-        if self.__board.game_status > 1:
-            # Get send move to remote players with updated data.
-            self.dog_server_interface.send_move( self.__board.get_move_to_send() )
+        #if self.__board.game_status > 1:
+        # Get send move to remote players with updated data.
+        print("game status - check board status", self.__board.game_status)
+        self.dog_server_interface.send_move( self.__board.get_move_to_send() )
+
+
+        self.update_widget_packs()
 
     # Insert game status to interface log list.
-    def update_gui_message(self, text, player="", player2=""):
-        message = ""
-        match text:
-            case "drew_card":
-                message = f"Jogador {player} comprou uma carta."
-            case "draw_card":
-                message = "Compre uma carta."
-            case "select_question":
-                message = f"Jogador {player} selecionou uma pergunta."
-            case "select_answer":
-                message = f"Jogador {player} selecionou uma resposta."
-            case "pending_turn":
-                message = f"Jogador {player} selecionou o jogador {player2} para responder uma pergunta."
-
-        match self.__board.game_status:
-            case 0:
-                pass
-
+    def update_gui_message(self):
+        message = self.__board.get_logs_message()
         self.__logs_listbox.insert( 0, message )
         self.__logs_listbox.yview( 0 )
 
@@ -235,14 +226,17 @@ class PlayerInterface( DogPlayerInterface ):
         self.__board.local_player = start_status.get_local_id()
 
     def prepare_current_move(self):
-        if self.__board.local_player.identifier == self.__board.current_player_turn:
+        self.__board.game_status = 1
+        if self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
             self.__board.update_board_position()
-            self.__board.game_status = 1
             self.__deck_button['state'] = 'normal'
 
     def receive_withdrawal_notification(self):
         self.__board.receive_withdrawal_notification()
         # self.update_gui(game_state)
+
+    def local_action(self):
+        pass
 
     def receive_move(self, received_data):
         # Used only when match has started.
@@ -254,14 +248,22 @@ class PlayerInterface( DogPlayerInterface ):
             self.prepare_current_move()
         else:
             self.__board.update_received_data( received_data )
+
             if received_data["game_status"] == 1 or received_data["game_status"] == 2:
                 #
                 self.prepare_current_move()
             # 3 - Game status: temporary turn.
             if received_data["game_status"] == 3:
                 if self.__board.local_player.turn:
-                    print("test turn")
                     self.draw_card( "create_answers" )
+
+                print("game_status - receive move", self.__board.game_status)
+                if self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
+                    self.prepare_current_move()
+
+            elif received_data["game_status"] == 4:
+                self.__board.game_status = 2
+                self.receive_move(self.__board.get_move_to_send())
 
         self.update_widget_packs()
 
@@ -289,10 +291,10 @@ class PlayerInterface( DogPlayerInterface ):
 
         # Frame that shows current player.
         for i in self.__current_turn.winfo_children():
-            if self.__board.local_player.identifier == self.__board.current_player_turn:
-                i.configure( text='Jogador da vez: Você.' )
+            if self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
+                i.configure( text='Jogador da vez: Você.', background='#90EE90', bg='#90EE90' )
             else:
-                i.configure( text=f'Jogador da vez: {self.__board.get_current_player_data( "name" )}.' )
+                i.configure( text=f'Jogador da vez: {self.__board.current_player_turn.name}.', background="#d95f57", bg='#d95f57' )
         # Logs block
         self.__logs_frame.grid( row=1, column=0, padx=5, pady=5 )
         self.__logs_listbox.pack( fill='both', expand=True )
@@ -308,7 +310,7 @@ class PlayerInterface( DogPlayerInterface ):
 
         self.__current_turn.grid( row=0, column=0, padx=5, pady=5, sticky='ew' )
         current_turn_label = Label( self.__current_turn,
-                                    text=f'Turno do Jogador: {self.__board.get_current_player_data( "name" )}.',
+                                    text=f'Turno do Jogador: {self.__board.current_player_turn.name}.',
                                     fg='white', background='#d95f57',
                                     font=24 )
 
@@ -342,7 +344,7 @@ class PlayerInterface( DogPlayerInterface ):
         self.__board_frame.pack_propagate( False )
         self.__hud_frame.grid_propagate( False )
         self.__current_turn.pack_propagate( False )
-        self.__logs_frame.pack_propagate( False )
+        self.__logs_frame.grid_propagate( False )
 
         current_turn_label.pack( fill="both", expand=True, padx=5, pady=5 )
         self.__logs_frame.grid( row=1, column=0, padx=5, pady=5 )
