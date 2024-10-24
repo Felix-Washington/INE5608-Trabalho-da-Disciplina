@@ -101,14 +101,11 @@ class PlayerInterface( DogPlayerInterface ):
             # Send first move to all players.
             self.dog_server_interface.send_move( self.__board.get_start_match_data() )
 
-            # Set game state to Waiting player move.
-            #self.__board.game_status = 1
-
             self.prepare_current_move()
-            self.update_widget_packs()
 
     # Function called to process card interface.
-    def draw_card(self, state):
+    def draw_and_select(self, state):
+        print(self.__board.deck.card)
         # Create window popup for the card.
         card_interface = Toplevel()
         card_interface.title( "Carta" )
@@ -159,42 +156,42 @@ class PlayerInterface( DogPlayerInterface ):
         card_interface.grab_set()
         card_interface.protocol( "WM_DELETE_WINDOW", lambda: card_interface.destroy() )
 
-    def check_board_status(self, card_type, selected_option=-1):
-        if card_type == "create_questions":
-            self.__board.deck.create_card_options( card_type, selected_option )
-            self.draw_card( card_type )
+    def check_board_status(self, state, selected_option=-1):
+        if state == "create_questions":
+            self.__board.deck.create_card_options( state, selected_option )
+            self.draw_and_select( state )
 
-        elif card_type == "create_answers":
+        elif state == "create_answers":
             self.__board.local_player.selected_question = selected_option
             if self.__board.current_position_board == 3:
-                card_type = "create_players"
+                state = "create_players"
                 selected_option = []
                 for player in self.__board.players:
                     if player.identifier != self.__board.local_player.identifier:
                         selected_option.append( player.identifier )
 
-            self.__board.deck.create_card_options( card_type, selected_option )
-            self.draw_card( card_type )
+            self.__board.deck.create_card_options( state, selected_option )
+            self.draw_and_select( state )
 
         # Run when player has selected an answer.
-        elif card_type == "selected_an_answer":
+        elif state == "selected_an_answer":
             self.__board.local_player.selected_answer = selected_option
             if self.__board.game_status == 3:
                 self.__board.game_status = 4
             elif self.__board.current_position_board == 1:
                 self.__board.game_status = 2
             elif self.__board.current_position_board == 2:
-                card_type = "create_players"
+                state = "create_players"
                 selected_option = []
                 for player in self.__board.players:
                     if player.identifier != self.__board.local_player.identifier:
                         selected_option.append( player.identifier )
 
-                self.__board.deck.create_card_options( card_type, selected_option )
-                self.draw_card( card_type )
+                self.__board.deck.create_card_options( state, selected_option )
+                self.draw_and_select( state )
 
         # Run when player select another player
-        elif card_type == "selected_a_player":
+        elif state == "selected_a_player":
             self.__board.local_player.selected_player = selected_option
             self.__board.game_status = 3
 
@@ -230,13 +227,11 @@ class PlayerInterface( DogPlayerInterface ):
         if self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
             self.__board.update_board_position()
             self.__deck_button['state'] = 'normal'
+        self.update_widget_packs()
 
     def receive_withdrawal_notification(self):
         self.__board.receive_withdrawal_notification()
         # self.update_gui(game_state)
-
-    def local_action(self):
-        pass
 
     def receive_move(self, received_data):
         # Used only when match has started.
@@ -244,7 +239,6 @@ class PlayerInterface( DogPlayerInterface ):
             self.__board.start_game( received_data )
             self.set_positions()
             self.start_match_widget_packs()
-            self.update_widget_packs()
             self.prepare_current_move()
         else:
             self.__board.update_received_data( received_data )
@@ -253,17 +247,10 @@ class PlayerInterface( DogPlayerInterface ):
                 #
                 self.prepare_current_move()
             # 3 - Game status: temporary turn.
-            if received_data["game_status"] == 3:
+            elif received_data["game_status"] == 3:
                 if self.__board.local_player.turn:
-                    self.draw_card( "create_answers" )
+                    self.draw_and_select( "create_answers" )
 
-                print("game_status - receive move", self.__board.game_status)
-                if self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
-                    self.prepare_current_move()
-
-            elif received_data["game_status"] == 4:
-                self.__board.game_status = 2
-                self.receive_move(self.__board.get_move_to_send())
 
         self.update_widget_packs()
 

@@ -26,20 +26,20 @@ class Board:
         # 0 - Start game / 1 - Waiting player move / 2 - End play / 3 - Temporary play / 4 - End temporary play
         self.__game_status = 0
         # ID from player on current turn.
-        self.__current_player_turn = -1
+        self.__current_player_turn = None
         # Position that the current player is on.
         self.__current_position_board = -1
 
         self.__winners = []
 
-    def start_match(self, players, local_id):
+    def start_match(self, players_id, local_player_id):
         # 0 - Name , 1 - ID , 2 - Connection order.
-        for player in players:
+        for player in players_id:
             new_player_name = player[0]
             new_player_id = player[1]
             new_player_image = f"images/kid_{player[2]}.png"
 
-            if new_player_id == local_id:
+            if new_player_id == local_player_id:
                 self.__local_player.initialize( new_player_name, new_player_image, new_player_id )
 
             new_player = Player()
@@ -115,6 +115,7 @@ class Board:
             if player.selected_question != -1:
                 card_question = player.selected_question
 
+        # Remove
         match_status = ""
 
         if self.__game_status == 2 or self.__game_status == 4:
@@ -154,28 +155,25 @@ class Board:
                     walk_value = 2
 
                 # Check if player is on the first board tile and get a wrong answer.
-                if player.position_board == 0 and result - 1:
+                elif player.position_board == 0 and result - 1:
                     walk_value = 0
 
-                if self.__current_position_board != 3:
-                    player.position_board += walk_value
-                else:
-                    if player.selected_player == -1:
-                        player.position_board += walk_value
-                    else:
-                        player.position_board += walk_value * -1
+                elif self.__current_position_board == 3 and player.selected_player != -1:
+                    walk_value *= -1
+
+                player.position_board += walk_value
 
                 # Check if player is on the last board tile.
                 if player.position_board >= self.__tile_amount:
                     player.position_board = 30
                     self.__winners.append(player.identifier)
 
-            if len(self.__winners) == 1:
-                self.__game_status = 5
-            elif len(self.__winners) > 1:
-                pass
-
-        self.__game_status = 2
+        if len(self.__winners) == 1:
+            self.__game_status = 5
+        elif len(self.__winners) > 1:
+            pass
+        else:
+            self.__game_status = 2
 
     def receive_withdrawal_notification(self):
         self.__game_status = 6  # match abandoned by opponent
