@@ -2,10 +2,6 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import simpledialog
 
-import random
-import os
-from PIL import Image, ImageTk
-
 from dog.dog_interface import DogPlayerInterface
 from dog.dog_actor import DogActor
 
@@ -54,9 +50,10 @@ class PlayerInterface( DogPlayerInterface ):
 
         # Connection with DOG.
         player_name = simpledialog.askstring( title="Player identification", prompt="Qual o seu nome?" )
-        self.dog_server_interface = DogActor()
-        message = self.dog_server_interface.initialize( player_name, self )
+        self.__dog_server_interface = DogActor()
+        message = self.__dog_server_interface.initialize( player_name, self )
         messagebox.showinfo( message=message )
+        self.__root.mainloop()
 
     def load_main_window(self):
         # Configuration of game window.
@@ -83,7 +80,7 @@ class PlayerInterface( DogPlayerInterface ):
 
     # Call DOG to try start the match.
     def start_match(self):
-        start_status = self.dog_server_interface.start_match( 3 )
+        start_status = self.__dog_server_interface.start_match( 3 )
         code = start_status.get_code()
         message = start_status.get_message()
 
@@ -99,13 +96,12 @@ class PlayerInterface( DogPlayerInterface ):
             self.start_match_widget_packs()
 
             # Send first move to all players.
-            self.dog_server_interface.send_move( self.__board.get_start_match_data() )
+            self.__dog_server_interface.send_move( self.__board.get_start_match_data() )
 
             self.prepare_current_move()
 
     # Function called to process card interface.
     def draw_and_select(self, state):
-        print(self.__board.deck.card)
         # Create window popup for the card.
         card_interface = Toplevel()
         card_interface.title( "Carta" )
@@ -158,66 +154,34 @@ class PlayerInterface( DogPlayerInterface ):
 
     def check_board_status(self, state, selected_option=-1):
         if state == "create_questions":
-            self.__board.deck.create_card_options( state, selected_option )
-            self.draw_and_select( state )
+            pass
 
         elif state == "create_answers":
             self.__board.local_player.selected_question = selected_option
-            if self.__board.current_position_board == 3:
-                state = "create_players"
-                selected_option = []
-                for player in self.__board.players:
-                    if player.identifier != self.__board.local_player.identifier:
-                        selected_option.append( player.identifier )
-
-            self.__board.deck.create_card_options( state, selected_option )
-            self.draw_and_select( state )
 
         # Run when player has selected an answer.
         elif state == "selected_an_answer":
             self.__board.local_player.selected_answer = selected_option
-            if self.__board.game_status == 3:
-                self.__board.game_status = 4
-            elif self.__board.current_position_board == 1:
-                self.__board.game_status = 2
-            elif self.__board.current_position_board == 2:
-                state = "create_players"
-                selected_option = []
-                for player in self.__board.players:
-                    if player.identifier != self.__board.local_player.identifier:
-                        selected_option.append( player.identifier )
-
-                self.__board.deck.create_card_options( state, selected_option )
-                self.draw_and_select( state )
+            state = "create_players"
+            selected_option = []
+            for player in self.__board.players:
+                if player.identifier != self.__board.local_player.identifier:
+                    selected_option.append( player.identifier )
 
         # Run when player select another player
         elif state == "selected_a_player":
             self.__board.local_player.selected_player = selected_option
             self.__board.game_status = 3
 
-        # Check if a play has finished.
-        if self.__board.game_status == 2 or self.__board.game_status == 4:
-
-            self.__board.process_board_status()
-            self.__board.update_turn()
-
-        if self.__board.game_status == 4:
-            self.prepare_current_move()
-
-        # Check if game status is not waiting for a player do his move.
-        #if self.__board.game_status > 1:
-        # Get send move to remote players with updated data.
-        print("game status - check board status", self.__board.game_status)
-        # self.dog_server_interface.send_move( self.__board.get_move_to_send() )
-
+        if self.__board.game_status == 1:
+            self.__board.deck.create_card_options( state, selected_option )
+            self.draw_and_select( state )
 
         self.update_widget_packs()
 
     # Insert game status to interface log list.
     def update_gui_message(self):
-        message = self.__board.get_logs_message()
-        self.__logs_listbox.insert( 0, message )
-        self.__logs_listbox.yview( 0 )
+        pass
 
     def receive_start(self, start_status):
         self.__board.local_player = start_status.get_local_id()
@@ -231,16 +195,15 @@ class PlayerInterface( DogPlayerInterface ):
 
     def receive_withdrawal_notification(self):
         self.__board.receive_withdrawal_notification()
-        # self.update_gui(game_state)
+        messagebox.showinfo( message='Um jogador abandonou a partida' )
 
     def receive_move(self, received_data):
         # Used only when match has started.
         if received_data["game_status"] == 0:
-            self.__board.start_game( received_data )
+            self.__board.remote_start_game( received_data )
             self.set_positions()
             self.start_match_widget_packs()
             self.prepare_current_move()
-
 
         self.update_widget_packs()
 
@@ -383,5 +346,4 @@ class PlayerInterface( DogPlayerInterface ):
     def on_closing(self):
         self.__root.destroy()
 
-    def board_loop(self):
-        self.__root.mainloop()
+

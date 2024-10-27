@@ -1,5 +1,3 @@
-
-
 class Position:
     def __init__(self, new_type, widget, image_path):
         super().__init__()

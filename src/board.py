@@ -57,7 +57,7 @@ class Board:
         self.set_positions_types()
 
     # Get all data from first receive move and create all objects based on information received.
-    def start_game(self, start_config):
+    def remote_start_game(self, start_config):
         # Creates players in the same order they were initially created.
         for player_id, player_data in start_config["players"].items():
             new_player = Player()
@@ -111,41 +111,12 @@ class Board:
     def update_player_move(self):
         pass
 
+    def verify_turn_response(self, ):
+        pass
+
     # Process all moves made from players.
     def process_board_status(self):
-        self.update_player_move()
-
-        for player in self.__players:
-            if player.turn:
-                # 1 - Correct / -1 - Wrong
-                result = self.__deck.check_answer(player.selected_answer )
-                # [Walk value * result] determine if a player will forward or backward in the board.
-                walk_value = 1 * result
-
-                # Check if position is "simples" and player got a correct answer.
-                if self.__current_position_board == 1 and result == 1:
-                    walk_value = 2
-
-                # Check if player is on the first board tile and get a wrong answer.
-                elif player.position_board == 0 and result - 1:
-                    walk_value = 0
-
-                elif self.__current_position_board == 3 and player.selected_player != -1:
-                    walk_value *= -1
-
-                player.position_board += walk_value
-
-                # Check if player is on the last board tile.
-                if player.position_board >= self.__tile_amount:
-                    player.position_board = 30
-                    self.__winners.append(player.identifier)
-
-        if len(self.__winners) == 1:
-            self.__game_status = 5
-        elif len(self.__winners) > 1:
-            pass
-        else:
-            self.__game_status = 2
+        pass
 
     def receive_withdrawal_notification(self):
         self.__game_status = 6  # match abandoned by opponent
@@ -170,28 +141,7 @@ class Board:
             return self.__deck.get_card_option_text( text_type, self.__current_position_board, data_id )
 
     def get_logs_message(self):
-        message = ""
-        if self.__local_player.identifier == self.__board.current_player_turn.identifier:
-            if self.__game_status == 1:
-                if self.__local_player.selected_question == -1:
-                    message = "Selecione uma pergunta."
-                elif self.__local_player.selected_answer == -1:
-                    message = "Selecione uma resposta."
-                elif self.__local_player.selected_answer == -1:
-                    message = "Selecione um jogador."
-        elif self.__local_player.turn:
-            if self.__board.game_status == 3:
-                message = "Selecione uma resposta."
-
-        else:
-            if self.__current_player_turn.selected_question != -1:
-                message = f" Jogador {self.__current_player_turn.name} selecionou uma pergunta."
-            if self.__current_player_turn.selected_answer != -1:
-                message = "Selecione uma resposta."
-            if self.__current_player_turn.selected_player != -1:
-                message = "Selecione uma resposta."
-
-        return message
+        pass
 
     # Get all neccessary data to start a match.
     def get_start_match_data(self):

@@ -1,8 +1,6 @@
 import random
 from card import Card
 
-import os
-
 
 class Deck:
     def __init__(self):
@@ -64,18 +62,14 @@ class Deck:
             self.__card = Card( data_id )
 
     def check_answer(self, answer):
-        correct_answer = self.__questions_with_answers[self.__card.question]
-
-        if correct_answer == answer:
-            return 1
-        return -1
+        pass
 
     def get_card_option_text(self, text_type, position_board=1, data_id=-1):
         if text_type == "question_title":
             return self.__questions[self.__card.question]
         elif text_type == "create_questions":
             # Set to 5 just for testing.
-            if position_board > 5:
+            if position_board > 0:
                 return "?"
             else:
                 return self.__questions[data_id]
