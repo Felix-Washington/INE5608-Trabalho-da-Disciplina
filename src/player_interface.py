@@ -53,8 +53,8 @@ class PlayerInterface( DogPlayerInterface ):
         self.__root.deiconify()
 
         # Connection with DOG.
-        self.dog_server_interface = DogActor()
         player_name = simpledialog.askstring( title="Player identification", prompt="Qual o seu nome?" )
+        self.dog_server_interface = DogActor()
         message = self.dog_server_interface.initialize( player_name, self )
         messagebox.showinfo( message=message )
 
@@ -83,7 +83,7 @@ class PlayerInterface( DogPlayerInterface ):
 
     # Call DOG to try start the match.
     def start_match(self):
-        start_status = self.dog_server_interface.start_match( 2 )
+        start_status = self.dog_server_interface.start_match( 3 )
         code = start_status.get_code()
         message = start_status.get_message()
 
@@ -208,7 +208,7 @@ class PlayerInterface( DogPlayerInterface ):
         #if self.__board.game_status > 1:
         # Get send move to remote players with updated data.
         print("game status - check board status", self.__board.game_status)
-        self.dog_server_interface.send_move( self.__board.get_move_to_send() )
+        # self.dog_server_interface.send_move( self.__board.get_move_to_send() )
 
 
         self.update_widget_packs()
@@ -240,16 +240,6 @@ class PlayerInterface( DogPlayerInterface ):
             self.set_positions()
             self.start_match_widget_packs()
             self.prepare_current_move()
-        else:
-            self.__board.update_received_data( received_data )
-
-            if received_data["game_status"] == 1 or received_data["game_status"] == 2:
-                #
-                self.prepare_current_move()
-            # 3 - Game status: temporary turn.
-            elif received_data["game_status"] == 3:
-                if self.__board.local_player.turn:
-                    self.draw_and_select( "create_answers" )
 
 
         self.update_widget_packs()
