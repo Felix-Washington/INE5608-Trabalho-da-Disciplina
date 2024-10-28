@@ -71,7 +71,7 @@ class Deck:
         if state == "question_title":
             return self.__questions[self.__card.question]
         elif state == "create_questions":
-            if position_board > 0:
+            if position_board != 0 or position_board != 3:
                 return "?"
             else:
                 return self.__questions[data_id]

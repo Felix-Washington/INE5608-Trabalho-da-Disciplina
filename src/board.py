@@ -142,6 +142,9 @@ class Board:
     def get_logs_message(self):
         pass
 
+    def reset_match(self):
+        pass
+
     # Get all neccessary data to start a match.
     def get_start_match_data(self):
         position_types = []

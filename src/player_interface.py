@@ -25,7 +25,7 @@ class PlayerInterface( DogPlayerInterface ):
         self.__root = Tk()
 
         # Window size and position.
-        self.__game_size = [int( self.__root.winfo_screenwidth() / 3 ), 800]
+        self.__game_size = [int( self.__root.winfo_screenwidth() / 2 ), 800]
         self.__game_pos_x = int( self.__root.winfo_screenwidth() / 2 - self.__game_size[0] / 2 )
         self.__game_pos_y = int( self.__root.winfo_screenheight() / 2 - self.__game_size[1] / 2 )
 
@@ -55,6 +55,9 @@ class PlayerInterface( DogPlayerInterface ):
         messagebox.showinfo( message=message )
         self.__root.mainloop()
 
+    def reset_match():
+        pass
+
     def load_main_window(self):
         # Configuration of game window.
         self.__root.geometry( f"{self.__game_size[0]}x{self.__game_size[1]}+{self.__game_pos_x}+{self.__game_pos_y}" )
@@ -80,16 +83,16 @@ class PlayerInterface( DogPlayerInterface ):
 
     # Call DOG to try start the match.
     def start_match(self):
-        start_status = self.__dog_server_interface.start_match( 2)
+        start_status = self.__dog_server_interface.start_match( 2 )
         code = start_status.get_code()
         message = start_status.get_message()
 
         if code == "0" or code == "1":
             messagebox.showinfo( message=message )
         else:  # (code=='2')
-            players = start_status.get_players()
+            players_id = start_status.get_players()
             local_player_id = start_status.get_local_id()
-            self.__board.start_match( players, local_player_id )
+            self.__board.start_match( players_id, local_player_id )
             messagebox.showinfo( message=start_status.get_message() )
 
             self.set_positions()
@@ -234,13 +237,17 @@ class PlayerInterface( DogPlayerInterface ):
                 i.configure( text=f'Jogador da vez: {self.__board.current_player_turn.name}.', background="#d95f57", bg='#d95f57' )
         # Logs block
         self.__logs_frame.grid( row=1, column=0, padx=5, pady=5 )
-        self.__logs_listbox.pack( fill='both', expand=True )
+        # self.__logs_listbox.pack( fill='both', expand=True )
         self.__deck_frame.grid( row=0, column=1, rowspan=2, padx=5, pady=5 )
         self.__deck_button.grid( row=0, column=0 )
 
     # Function that load all wigets in interface when a match has started.
     def start_match_widget_packs(self):
         # Frame that holds all positions.
+        self.__board_frame.pack_propagate( False )
+        self.__hud_frame.grid_propagate( False )
+        self.__current_turn.pack_propagate( False )
+        self.__logs_frame.grid_propagate( False )
         self.__board_positions_frame.grid( row=0, column=0, sticky="ew" )
         # Frame that hold frames players hud (logs, deck, and current player).
         self.__hud_frame.grid( row=2, sticky="ew" )
@@ -278,10 +285,7 @@ class PlayerInterface( DogPlayerInterface ):
                 column = 0
 
         # Propagate.
-        self.__board_frame.pack_propagate( False )
-        self.__hud_frame.grid_propagate( False )
-        self.__current_turn.pack_propagate( False )
-        self.__logs_frame.grid_propagate( False )
+
 
         current_turn_label.pack( fill="both", expand=True, padx=5, pady=5 )
         self.__logs_frame.grid( row=1, column=0, padx=5, pady=5 )
