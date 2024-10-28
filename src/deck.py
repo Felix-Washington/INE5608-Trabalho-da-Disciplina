@@ -51,29 +51,31 @@ class Deck:
 
         self.__card = Card( questions_current_list )
 
-    def create_card_options(self, data_type, data_id):
-        if data_type == "create_questions":
+    def create_card_options(self, state, options):
+        if state == "create_questions":
             self.create_card()
-        elif data_type == "create_answers":
-            # If type = answers, data_id will be a key from a selected question.
-            self.__card = Card( self.__card_current_answers[data_id], data_id )
+        elif state == "create_answers":
+            # If state = create_answers, options will be a key from a selected question.
+            self.__card = Card( self.__card_current_answers[options], options )
         else:
-            # If type = players, data_id will be a list of players ids.
-            self.__card = Card( data_id )
+            # If state = create_players, options will be a list of players ids.
+            self.__card = Card( options )
 
     def check_answer(self, answer):
         pass
 
-    def get_card_option_text(self, text_type, position_board=1, data_id=-1):
-        if text_type == "question_title":
+    def get_question_description(self):
+        return self.__questions[self.__card.question]
+
+    def get_card_option_text(self, state, position_board=1, data_id=-1):
+        if state == "question_title":
             return self.__questions[self.__card.question]
-        elif text_type == "create_questions":
-            # Set to 5 just for testing.
+        elif state == "create_questions":
             if position_board > 0:
                 return "?"
             else:
                 return self.__questions[data_id]
-        elif text_type == "create_answers":
+        elif state == "create_answers":
             return self.__answers[data_id]
 
     def create_dicts(self):

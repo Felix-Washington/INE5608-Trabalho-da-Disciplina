@@ -80,16 +80,16 @@ class PlayerInterface( DogPlayerInterface ):
 
     # Call DOG to try start the match.
     def start_match(self):
-        start_status = self.__dog_server_interface.start_match( 3 )
+        start_status = self.__dog_server_interface.start_match( 2)
         code = start_status.get_code()
         message = start_status.get_message()
 
         if code == "0" or code == "1":
             messagebox.showinfo( message=message )
         else:  # (code=='2')
-            players_id = start_status.get_players()
+            players = start_status.get_players()
             local_player_id = start_status.get_local_id()
-            self.__board.start_match( players_id, local_player_id )
+            self.__board.start_match( players, local_player_id )
             messagebox.showinfo( message=start_status.get_message() )
 
             self.set_positions()
@@ -153,10 +153,7 @@ class PlayerInterface( DogPlayerInterface ):
         card_interface.protocol( "WM_DELETE_WINDOW", lambda: card_interface.destroy() )
 
     def check_board_status(self, state, selected_option=-1):
-        if state == "create_questions":
-            pass
-
-        elif state == "create_answers":
+        if state == "create_answers":
             self.__board.local_player.selected_question = selected_option
 
         # Run when player has selected an answer.
@@ -173,7 +170,7 @@ class PlayerInterface( DogPlayerInterface ):
             self.__board.local_player.selected_player = selected_option
             self.__board.game_status = 3
 
-        if self.__board.game_status == 1:
+        if state == "create_questions" or state == "create_answers" or state == "selected_an_answer":
             self.__board.deck.create_card_options( state, selected_option )
             self.draw_and_select( state )
 

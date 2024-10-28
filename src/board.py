@@ -28,13 +28,13 @@ class Board:
         # ID from player on current turn.
         self.__current_player_turn = None
         # Position that the current player is on.
-        self.__current_position_board = -1
+        self.__current_position_type = -1
 
         self.__winners = []
 
-    def start_match(self, players_id, local_player_id):
+    def start_match(self, players, local_player_id):
         # 0 - Name , 1 - ID , 2 - Connection order.
-        for player in players_id:
+        for player in players:
             new_player_name = player[0]
             new_player_id = player[1]
             new_player_image = f"images/kid_{player[2]}.png"
@@ -61,13 +61,12 @@ class Board:
         # Creates players in the same order they were initially created.
         for player_id, player_data in start_config["players"].items():
             new_player = Player()
+            new_player.initialize( player_data[0], player_data[1], player_id, player_data[2] )
 
             # Set local player.
             if player_id == self.__local_player:
                 self.__local_player = new_player
-                self.__local_player.initialize( player_data[0], player_data[1], player_id, player_data[2] )
 
-            new_player.initialize( player_data[0], player_data[1], player_id, player_data[2] )
             self.__players.append( new_player )
 
             # Set player of the current turn.
@@ -126,7 +125,7 @@ class Board:
         pass
 
     def update_board_position(self):
-        self.__current_position_board = self.__positions[self.__current_player_turn.position_board].type
+        self.__current_position_type = self.__positions[self.__current_player_turn.position_board].type
 
     # Update all data received from receive move made from another player.
     def update_received_data(self, move):
@@ -138,7 +137,7 @@ class Board:
                 if player.identifier == data_id:
                     return player.name
         else:
-            return self.__deck.get_card_option_text( text_type, self.__current_position_board, data_id )
+            return self.__deck.get_card_option_text( text_type, self.__current_position_type, data_id )
 
     def get_logs_message(self):
         pass
@@ -197,5 +196,5 @@ class Board:
         return self.__positions
 
     @property
-    def current_position_board(self):
-        return self.__current_position_board
+    def current_position_type(self):
+        return self.__current_position_type
