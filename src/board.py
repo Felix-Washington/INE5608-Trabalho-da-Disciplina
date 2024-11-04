@@ -128,8 +128,6 @@ class Board:
                         "card_question": card_question, "card_answers": self.__deck.card_current_answers,
                         "position_type": self.__current_position_board, "match_status": match_status}
 
-        #print("move", move_to_send)
-
         return move_to_send
 
     # Update a move made from local players to players list.
@@ -162,6 +160,8 @@ class Board:
                     walk_value *= -1
 
                 player.position_board += walk_value
+
+
 
                 # Check if player is on the last board tile.
                 if player.position_board >= self.__tile_amount:
@@ -224,6 +224,7 @@ class Board:
                 self.__local_player.selected_question = player.selected_question
                 self.__local_player.turn = True
                 break
+            print( move["players"] )
 
         # Check if local player is on the current turn.
         if self.__local_player.identifier == self.__current_player_turn.identifier:
@@ -249,27 +250,37 @@ class Board:
         else:
             return self.__deck.get_card_option_text( text_type, self.__current_position_board, data_id )
 
-    def get_logs_message(self):
+    def get_logs_message(self, state):
         message = ""
-        if self.__local_player.identifier == self.__board.current_player_turn.identifier:
-            if self.__game_status == 1:
-                if self.__local_player.selected_question == -1:
-                    message = "Selecione uma pergunta."
-                elif self.__local_player.selected_answer == -1:
-                    message = "Selecione uma resposta."
-                elif self.__local_player.selected_answer == -1:
-                    message = "Selecione um jogador."
-        elif self.__local_player.turn:
-            if self.__board.game_status == 3:
+        if self.__local_player.identifier == self.__current_player_turn.identifier:
+            if state == "create_questions":
+                message = "Selecione uma pergunta."
+            elif state == "create_answers":
                 message = "Selecione uma resposta."
+            elif state == "create_players":
+                message = "Selecione um jogador."
 
         else:
-            if self.__current_player_turn.selected_question != -1:
-                message = f" Jogador {self.__current_player_turn.name} selecionou uma pergunta."
-            if self.__current_player_turn.selected_answer != -1:
-                message = "Selecione uma resposta."
+            selected_player_name = ""
+            for player in self.__players:
+                if self.__current_player_turn.selected_player == player.identifier:
+                    selected_player_name = player.name
+                    break
+
+            if self.__local_player.turn and self.__game_status == 3:
+                message = f"Jogador {self.__current_player_turn.name} enviou uma pergunta para você."
+
+
             if self.__current_player_turn.selected_player != -1:
-                message = "Selecione uma resposta."
+                selected_player_name = ""
+                for player in self.__players:
+                    if self.__current_player_turn.selected_player == player.identifier:
+                        selected_player_name = player.name
+                message = f" Jogador {self.__current_player_turn.name} selecionou o jogador {selected_player_name} para responder."
+            elif self.__current_player_turn.selected_answer != -1:
+                message = f" Jogador {self.__current_player_turn.name} selecionou uma resposta."
+            elif self.__current_player_turn.selected_question != -1:
+                message = f" Jogador {self.__current_player_turn.name} selecionou uma pergunta."
 
         return message
 
