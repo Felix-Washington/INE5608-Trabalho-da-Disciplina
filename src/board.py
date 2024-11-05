@@ -85,7 +85,7 @@ class Board:
             new_type = int( random.uniform( 1, 4 ) )
             position_type_list.append( new_type )
 
-        position_type_list[0] = 2
+        position_type_list[0] = 3
         position_type_list[self.__tile_amount + 1] = 0
         # Call a function to create position objects.
         self.set_positions( position_type_list )
@@ -107,11 +107,15 @@ class Board:
     def get_move_to_send(self):
         players = {}
         card_question = -1
-        for i in range(len(self.__players)):
+        for i in range( len( self.__players ) ):
             if self.__players[i].identifier == self.__local_player.identifier:
-                self.__players[i] = self.__local_player
+                self.__players[i].selected_question = self.__local_player.selected_question
+                self.__players[i].selected_answer = self.__local_player.selected_answer
+                self.__players[i].selected_player = self.__local_player.selected_player
+                self.__players[i].turn = self.__local_player.turn
 
             players[self.__players[i].identifier] = self.__players[i].get_player_data()
+
             if self.__players[i].selected_question != -1:
                 card_question = self.__players[i].selected_question
 
@@ -127,7 +131,6 @@ class Board:
         for i in range( len( self.__players ) ):
             if self.__players[i].identifier == self.__local_player.identifier:
                 self.__players[i] = self.__local_player
-                break
 
     # Process all moves made from players.
     def process_board_status(self):
@@ -136,7 +139,7 @@ class Board:
         for player in self.__players:
             if player.turn:
                 # 1 - Correct / -1 - Wrong
-                result = self.__deck.check_answer(player.selected_answer )
+                result = self.__deck.check_answer( player.selected_answer )
                 # [Walk value * result] determine if a player will forward or backward in the board.
                 walk_value = 1 * result
 
@@ -153,16 +156,14 @@ class Board:
 
                 player.position_board += walk_value
 
-
-
                 # Check if player is on the last board tile.
                 if player.position_board >= self.__tile_amount:
                     player.position_board = 30
-                    self.__winners.append(player.identifier)
+                    self.__winners.append( player.identifier )
 
-        if len(self.__winners) == 1:
+        if len( self.__winners ) == 1:
             self.__game_status = 5
-        elif len(self.__winners) > 1:
+        elif len( self.__winners ) > 1:
             pass
         else:
             self.__game_status = 2
@@ -173,7 +174,7 @@ class Board:
     # Update to next player on turn list.
     def update_turn(self):
         for i in range( len( self.__players ) ):
-            if self.players[i].identifier == self.__current_player_turn.identifier:
+            if self.__players[i].identifier == self.__current_player_turn.identifier:
                 next_index = i + 1
                 if next_index > len( self.__players ) - 1:
                     next_index = 0
@@ -187,15 +188,13 @@ class Board:
                 player.turn = False
             player.reset_turn()
 
-        self.__current_position_board = -1
+        self.update_board_position()
 
     def update_board_position(self):
         self.__current_position_board = self.__positions[self.__current_player_turn.position_board].type
 
     # Update all data received from receive move made from another player.
     def update_received_data(self, move):
-        self.__current_player_turn.identifier = move["current_player"]
-
         for player in self.__players:
             for key, data in move["players"].items():
                 # Update all received player data.
@@ -207,8 +206,9 @@ class Board:
                     player.selected_answer = data[4]
                     player.time_answered = data[5]
 
-            if player.identifier == self.__current_player_turn:
-                self.__current_player_turn = player
+            if player.identifier == move["current_player"]:
+                self.__current_player_turn = Player()
+                self.__current_player_turn.initialize( player.name, player.image, player.identifier, True )
 
         # Check if local player has been selected to answer a question.
         for player in self.__players:
@@ -216,7 +216,6 @@ class Board:
                 self.__local_player.selected_question = player.selected_question
                 self.__local_player.turn = True
                 break
-            print( move["players"] )
 
         # Check if local player is on the current turn.
         if self.__local_player.identifier == self.__current_player_turn.identifier:
@@ -225,7 +224,7 @@ class Board:
         # Convert all keys from string to int.
         move["card_answers"] = {int( key ): value for key, value in move["card_answers"].items()}
 
-        self.__current_position_board = move["position_type"]
+        #self.__current_position_board = move["position_type"]
 
         self.__game_status = move["game_status"]
         if self.__deck.card is not None:
@@ -255,26 +254,20 @@ class Board:
                 message = "Selecione um jogador."
 
         else:
-            selected_player_name = ""
-            for player in self.__players:
-                if self.__current_player_turn.selected_player == player.identifier:
-                    selected_player_name = player.name
-                    break
-
             if self.__local_player.turn and self.__game_status == 3:
                 message = f"Jogador {self.__current_player_turn.name} enviou uma pergunta para você."
-
-
-            if self.__current_player_turn.selected_player != -1:
-                selected_player_name = ""
-                for player in self.__players:
-                    if self.__current_player_turn.selected_player == player.identifier:
-                        selected_player_name = player.name
-                message = f" Jogador {self.__current_player_turn.name} selecionou o jogador {selected_player_name} para responder."
-            elif self.__current_player_turn.selected_answer != -1:
-                message = f" Jogador {self.__current_player_turn.name} selecionou uma resposta."
-            elif self.__current_player_turn.selected_question != -1:
-                message = f" Jogador {self.__current_player_turn.name} selecionou uma pergunta."
+            elif self.__local_player.turn is not True and self.__game_status == 3:
+                if self.__current_player_turn.selected_player != -1:
+                    selected_player_name = ""
+                    for player in self.__players:
+                        if self.__current_player_turn.selected_player == player.identifier:
+                            selected_player_name = player.name
+                            break
+                    message = f" Jogador {self.__current_player_turn.name} selecionou o jogador {selected_player_name} para responder."
+                elif self.__current_player_turn.selected_answer != -1:
+                    message = f" Jogador {self.__current_player_turn.name} selecionou uma resposta."
+                elif self.__current_player_turn.selected_question != -1:
+                    message = f" Jogador {self.__current_player_turn.name} selecionou uma pergunta."
 
         return message
 

@@ -109,7 +109,8 @@ class PlayerInterface( DogPlayerInterface ):
 
     # Function called to process card interface.
     def draw_and_select(self, state):
-        self.update_gui_message(state)
+
+        self.update_gui_message( state )
         # Create window popup for the card.
         card_interface = Toplevel()
         card_interface.title( "Carta" )
@@ -130,6 +131,7 @@ class PlayerInterface( DogPlayerInterface ):
         # Update card title text base on card type.
         card_title_text = ""
         card_option_type = ""
+
         if state == "create_questions":
             self.__deck_button['state'] = 'disabled'
             card_title_text = "Escolha uma pergunta!"
@@ -161,6 +163,7 @@ class PlayerInterface( DogPlayerInterface ):
         card_interface.protocol( "WM_DELETE_WINDOW", lambda: card_interface.destroy() )
 
     def check_board_status(self, state, selected_option=-1):
+        print( self.__board.current_position_board )
         if state == "create_answers":
             self.__board.local_player.selected_question = selected_option
             if self.__board.current_position_board == 3:
@@ -195,9 +198,7 @@ class PlayerInterface( DogPlayerInterface ):
         elif self.__board.game_status == 2:
             self.__board.process_board_status()
             self.__board.update_turn()
-
             self.__board.game_status = 1
-            self.__board.update_board_position()
 
         self.update_widget_packs()
         # Get send move to remote players with updated data.
@@ -205,7 +206,7 @@ class PlayerInterface( DogPlayerInterface ):
 
     # Insert game status to interface log list.
     def update_gui_message(self, state):
-        message = self.__board.get_logs_message(state)
+        message = self.__board.get_logs_message( state )
         if message != "":
             self.__logs_listbox.insert( 0, message )
             self.__logs_listbox.yview( 0 )
@@ -214,7 +215,7 @@ class PlayerInterface( DogPlayerInterface ):
         self.__board.local_player = start_status.get_local_id()
 
     def receive_withdrawal_notification(self):
-        messagebox.showinfo( message=f"player {self.__board.local_player.name} disconected")
+        messagebox.showinfo( message=f"player {self.__board.local_player.name} disconected" )
         self.__board.receive_withdrawal_notification()
         # self.update_gui(game_state)
 
@@ -230,17 +231,18 @@ class PlayerInterface( DogPlayerInterface ):
                 self.__deck_button['state'] = 'normal'
         else:
             self.__board.update_received_data( received_data )
-            print(self.__board.game_status)
+
             if self.__board.game_status == 4 and self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
                 self.__board.game_status = 2
-                self.check_board_status("")
+                self.check_board_status( "" )
 
-            if self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
+            elif self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
                 self.__board.game_status = 1
+                self.__board.update_board_position()
                 self.__deck_button['state'] = 'normal'
 
             # 3 - Game status: temporary turn.
-            if self.__board.game_status == 3:
+            elif self.__board.game_status == 3:
                 if self.__board.local_player.turn:
                     self.draw_and_select( "create_answers" )
 
