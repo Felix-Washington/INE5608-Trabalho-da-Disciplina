@@ -107,26 +107,18 @@ class Board:
     def get_move_to_send(self):
         players = {}
         card_question = -1
-        for player in self.__players:
-            if player.identifier == self.__local_player.identifier:
-                player = self.__local_player
+        for i in range(len(self.__players)):
+            if self.__players[i].identifier == self.__local_player.identifier:
+                self.__players[i] = self.__local_player
 
-            players[player.identifier] = player.get_player_data()
-            if player.selected_question != -1:
-                card_question = player.selected_question
-
-        # Remove
-        match_status = ""
-
-        if self.__game_status == 2 or self.__game_status == 4:
-            match_status = "next"
-        elif self.__game_status == 1 or self.__game_status == 3:
-            match_status = "progress"
+            players[self.__players[i].identifier] = self.__players[i].get_player_data()
+            if self.__players[i].selected_question != -1:
+                card_question = self.__players[i].selected_question
 
         move_to_send = {"players": players, "current_player": self.__current_player_turn.identifier,
                         "game_status": self.__game_status,
                         "card_question": card_question, "card_answers": self.__deck.card_current_answers,
-                        "position_type": self.__current_position_board, "match_status": match_status}
+                        "position_type": self.__current_position_board, "match_status": "next"}
 
         return move_to_send
 
@@ -236,6 +228,8 @@ class Board:
         self.__current_position_board = move["position_type"]
 
         self.__game_status = move["game_status"]
+        if self.__deck.card is not None:
+            self.__deck.card.question = move["card_question"]
         self.__deck.card_current_answers = move["card_answers"]
 
         if move["game_status"] == 3:
