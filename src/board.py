@@ -57,7 +57,7 @@ class Board:
         self.set_positions_types()
 
     # Get all data from first receive move and create all objects based on information received.
-    def start_game(self, start_config):
+    def remote_start_game(self, start_config):
         # Creates players in the same order they were initially created.
         for player_id, player_data in start_config["players"].items():
             new_player = Player()
@@ -166,7 +166,9 @@ class Board:
         elif len( self.__winners ) > 1:
             pass
         else:
-            self.__game_status = 2
+            self.update_turn()
+            self.__game_status = 1
+            self.update_board_position()
 
     def receive_withdrawal_notification(self):
         self.__game_status = 6  # match abandoned by opponent
@@ -187,8 +189,6 @@ class Board:
             if player.identifier != self.__current_player_turn.identifier:
                 player.turn = False
             player.reset_turn()
-
-        self.update_board_position()
 
     def update_board_position(self):
         self.__current_position_board = self.__positions[self.__current_player_turn.position_board].type
@@ -224,16 +224,15 @@ class Board:
         # Convert all keys from string to int.
         move["card_answers"] = {int( key ): value for key, value in move["card_answers"].items()}
 
-        #self.__current_position_board = move["position_type"]
-
         self.__game_status = move["game_status"]
         if self.__deck.card is not None:
             self.__deck.card.question = move["card_question"]
         self.__deck.card_current_answers = move["card_answers"]
 
+        self.__current_position_board = move["position_type"]
+
         if move["game_status"] == 3:
             self.__deck.create_card_options( "create_answers", move["card_question"] )
-            self.__current_position_board = move["position_type"]
 
     def get_card_information(self, text_type, data_id):
         if text_type == "create_players":

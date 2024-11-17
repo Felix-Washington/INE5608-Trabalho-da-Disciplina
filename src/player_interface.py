@@ -163,7 +163,6 @@ class PlayerInterface( DogPlayerInterface ):
         card_interface.protocol( "WM_DELETE_WINDOW", lambda: card_interface.destroy() )
 
     def check_board_status(self, state, selected_option=-1):
-        print( self.__board.current_position_board )
         if state == "create_answers":
             self.__board.local_player.selected_question = selected_option
             if self.__board.current_position_board == 3:
@@ -197,8 +196,8 @@ class PlayerInterface( DogPlayerInterface ):
         # Check if a play has finished.
         elif self.__board.game_status == 2:
             self.__board.process_board_status()
-            self.__board.update_turn()
-            self.__board.game_status = 1
+
+            print("sdmv", self.__board.current_position_board )
 
         self.update_widget_packs()
         # Get send move to remote players with updated data.
@@ -222,29 +221,26 @@ class PlayerInterface( DogPlayerInterface ):
     def receive_move(self, received_data):
         # Used only when match has started.
         if received_data["game_status"] == 0:
-            self.__board.start_game( received_data )
+            self.__board.remote_start_game( received_data )
             self.set_positions()
             self.start_match_widget_packs()
-            self.__board.game_status = 1
-            if self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
-                self.__board.update_board_position()
-                self.__deck_button['state'] = 'normal'
         else:
             self.__board.update_received_data( received_data )
 
-            if self.__board.game_status == 4 and self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
-                self.__board.game_status = 2
-                self.check_board_status( "" )
+        if self.__board.game_status == 4 and self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
+            self.__board.game_status = 2
+            self.check_board_status( "" )
 
-            elif self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
-                self.__board.game_status = 1
-                self.__board.update_board_position()
-                self.__deck_button['state'] = 'normal'
+        elif self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
+            self.__board.game_status = 1
+            self.__board.update_board_position()
+            self.__deck_button['state'] = 'normal'
+            print("rcvm", self.__board.current_position_board )
 
-            # 3 - Game status: temporary turn.
-            elif self.__board.game_status == 3:
-                if self.__board.local_player.turn:
-                    self.draw_and_select( "create_answers" )
+        # 3 - Game status: temporary turn.
+        elif self.__board.game_status == 3:
+            if self.__board.local_player.turn:
+                self.draw_and_select( "create_answers" )
 
         self.update_widget_packs()
 
