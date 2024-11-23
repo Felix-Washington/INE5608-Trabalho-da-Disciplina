@@ -107,9 +107,7 @@ class PlayerInterface( DogPlayerInterface ):
                 self.__deck_button['state'] = 'normal'
             self.update_widget_packs()
 
-    # Function called to process card interface.
-    def draw_and_select(self, state):
-
+    def update_card_interface(self, state):
         self.update_gui_message( state )
         # Create window popup for the card.
         card_interface = Toplevel()
@@ -151,7 +149,7 @@ class PlayerInterface( DogPlayerInterface ):
             card_option = Button(
                 card_frame,
                 text=self.__board.get_card_information( state, option ),
-                command=lambda key=option: [self.check_board_status( card_option_type, key ), card_interface.destroy()],
+                command=lambda key=option: [self.draw_and_select( card_option_type, key ), card_interface.destroy()],
                 width=300, height=2, font=('Arial', 12) )
             card_option.pack( padx=10, pady=10 )
 
@@ -162,47 +160,16 @@ class PlayerInterface( DogPlayerInterface ):
         card_interface.grab_set()
         card_interface.protocol( "WM_DELETE_WINDOW", lambda: card_interface.destroy() )
 
-    def check_board_status(self, state, selected_option=-1):
-        print( self.__board.current_position_board )
-        if state == "create_answers":
-            self.__board.local_player.selected_question = selected_option
-            if self.__board.current_position_board == 3:
-                state = "create_players"
+    # Function called to process card interface.
+    def draw_and_select(self, state=-1, selected_options=-1):
+        print('das', selected_options, state)
+        state = self.__board.check_board_status(state, selected_options)
 
-        # Run when player has selected an answer.
-        elif state == "selected_an_answer":
-            self.__board.local_player.selected_answer = selected_option
-            if self.__board.game_status == 3:
-                self.__board.game_status = 4
-            elif self.__board.current_position_board == 1:
-                self.__board.game_status = 2
-            elif self.__board.current_position_board == 2:
-                state = "create_players"
+        move = self.__board.get_move_to_send()
+        self.dog_server_interface.send_move( move )
 
-        # Run when player select another player
-        elif state == "selected_a_player":
-            self.__board.local_player.selected_player = selected_option
-            self.__board.game_status = 3
-
-        if state == "create_players":
-            selected_option = []
-            for player in self.__board.players:
-                if player.identifier != self.__board.local_player.identifier:
-                    selected_option.append( player.identifier )
-
-        if state != "selected_a_player" and (self.__board.game_status == 1 or self.__board.game_status == 3):
-            self.__board.deck.create_card_options( state, selected_option )
-            self.draw_and_select( state )
-
-        # Check if a play has finished.
-        elif self.__board.game_status == 2:
-            self.__board.process_board_status()
-            self.__board.update_turn()
-            self.__board.game_status = 1
-
-        self.update_widget_packs()
-        # Get send move to remote players with updated data.
-        self.dog_server_interface.send_move( self.__board.get_move_to_send() )
+        if state:
+            self.update_card_interface(state)
 
     # Insert game status to interface log list.
     def update_gui_message(self, state):
@@ -212,7 +179,7 @@ class PlayerInterface( DogPlayerInterface ):
             self.__logs_listbox.yview( 0 )
 
     def receive_start(self, start_status):
-        self.__board.local_player = start_status.get_local_id()
+        self.__board.receive_start(start_status)
 
     def receive_withdrawal_notification(self):
         messagebox.showinfo( message=f"player {self.__board.local_player.name} disconected" )
@@ -222,7 +189,7 @@ class PlayerInterface( DogPlayerInterface ):
     def receive_move(self, received_data):
         # Used only when match has started.
         if received_data["game_status"] == 0:
-            self.__board.start_game( received_data )
+            self.__board.remote_start_game( received_data )
             self.set_positions()
             self.start_match_widget_packs()
             self.__board.game_status = 1
@@ -232,19 +199,19 @@ class PlayerInterface( DogPlayerInterface ):
         else:
             self.__board.update_received_data( received_data )
 
-            if self.__board.game_status == 4 and self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
+            if self.__board.game_status == 4:
+            # and self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
                 self.__board.game_status = 2
-                self.check_board_status( "" )
+                self.__board.check_board_status( "" )
 
             elif self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
                 self.__board.game_status = 1
-                self.__board.update_board_position()
                 self.__deck_button['state'] = 'normal'
 
             # 3 - Game status: temporary turn.
             elif self.__board.game_status == 3:
                 if self.__board.local_player.turn:
-                    self.draw_and_select( "create_answers" )
+                    self.draw_and_select( state="create_answers" )
 
         self.update_widget_packs()
 
@@ -370,7 +337,7 @@ class PlayerInterface( DogPlayerInterface ):
         self.__deck_frame = Frame( self.__hud_frame )
         # Button used to draw a card.
         self.__deck_button = Button( self.__deck_frame, width=15, height=13, text="?",
-                                     command=lambda: [self.check_board_status( "create_questions" )],
+                                     command=lambda: [self.draw_and_select( "create_questions" )],
                                      bg='black', highlightthickness=2, font=48, fg='white', state='disabled' )
 
     # Create Menu item and add its buttons.

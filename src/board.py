@@ -28,7 +28,7 @@ class Board:
         # ID from player on current turn.
         self.__current_player_turn = None
         # Position that the current player is on.
-        self.__current_position_board = -1
+        self.__current_position_type = -1
 
         self.__winners = []
 
@@ -56,8 +56,12 @@ class Board:
         # Create board positions.
         self.set_positions_types()
 
+    def receive_start(self, status):
+        local_id = status.get_local_id()
+        self.__local_player.identifier = local_id
+
     # Get all data from first receive move and create all objects based on information received.
-    def start_game(self, start_config):
+    def remote_start_game(self, start_config):
         # Creates players in the same order they were initially created.
         for player_id, player_data in start_config["players"].items():
             new_player = Player()
@@ -82,7 +86,10 @@ class Board:
     def set_positions_types(self):
         position_type_list = []
         for i in range( self.__tile_amount + 2 ):
-            new_type = int( random.uniform( 1, 4 ) )
+            if i % 4 == 0:
+                new_type = 3
+            else:
+                new_type = int( random.uniform( 1, 3 ) )
             position_type_list.append( new_type )
 
         position_type_list[0] = 3
@@ -104,6 +111,53 @@ class Board:
             new_position = Position( new_type, None, image_path )
             self.__positions.append( new_position )
 
+    def check_board_status(self, state, selected_option=-1):
+        if state == "create_answers":
+            self.__local_player.selected_question = selected_option
+            if self.__current_position_type == 3:
+                state = "create_players"
+
+        # Run when player has selected an answer.
+        elif state == "selected_an_answer":
+            self.__local_player.selected_answer = selected_option
+            if self.__game_status == 3:
+                self.__game_status = 4
+            elif self.__current_position_type == 1:
+                self.__game_status = 2
+            elif self.__current_position_type == 2:
+                state = "create_players"
+
+        # Run when player select another player
+        elif state == "selected_a_player":
+            self.__local_player.selected_player = selected_option
+            self.__game_status = 3
+
+        if state == "create_players":
+            selected_option = []
+            for player in self.__players:
+                if player.identifier != self.__local_player.identifier:
+                    selected_option.append( player.identifier )
+
+        if state != "selected_a_player" and (self.__game_status == 1 or self.__game_status == 3):
+            self.__deck.create_card_options( state, selected_option )
+            return state
+
+        # elif self.__game_status == 4:
+        #     self.__process_board_status()
+
+        # Check if a play has finished.
+        elif self.__game_status == 2:
+            print(self.__local_player.identifier)
+            self.process_board_status()
+            self.update_turn()
+            self.__game_status = 1
+            return None
+
+
+        print('cbs', self.__game_status)
+        # Get send move to remote players with updated data.
+
+
     def get_move_to_send(self):
         players = {}
         card_question = -1
@@ -122,7 +176,7 @@ class Board:
         move_to_send = {"players": players, "current_player": self.__current_player_turn.identifier,
                         "game_status": self.__game_status,
                         "card_question": card_question, "card_answers": self.__deck.card_current_answers,
-                        "position_type": self.__current_position_board, "match_status": "next"}
+                        "position_type": self.__current_position_type, "match_status": "next"}
 
         return move_to_send
 
@@ -134,7 +188,7 @@ class Board:
 
     # Process all moves made from players.
     def process_board_status(self):
-        self.update_player_move()
+        # self.update_player_move()
 
         for player in self.__players:
             if player.turn:
@@ -144,17 +198,21 @@ class Board:
                 walk_value = 1 * result
 
                 # Check if position is "simples" and player got a correct answer.
-                if self.__current_position_board == 1 and result == 1:
+                if self.__current_position_type == 1 and result == 1:
                     walk_value = 2
 
                 # Check if player is on the first board tile and get a wrong answer.
-                elif player.position_board == 0 and result - 1:
-                    walk_value = 0
-
-                elif self.__current_position_board == 3 and player.selected_player != -1:
+                elif self.__current_position_type == 3 and player.selected_player != -1:
                     walk_value *= -1
 
+                elif player.position_board == 0 and result == -1:
+                    walk_value = 0
+
+                print('slctd_plyr', player.selected_player)
+                print('pst_board_type', self.__current_position_type)
                 player.position_board += walk_value
+
+                print(walk_value, self.__local_player.identifier)
 
                 # Check if player is on the last board tile.
                 if player.position_board >= self.__tile_amount:
@@ -191,7 +249,7 @@ class Board:
         self.update_board_position()
 
     def update_board_position(self):
-        self.__current_position_board = self.__positions[self.__current_player_turn.position_board].type
+        self.__current_position_type = self.__positions[self.__current_player_turn.position_board].type
 
     # Update all data received from receive move made from another player.
     def update_received_data(self, move):
@@ -224,7 +282,7 @@ class Board:
         # Convert all keys from string to int.
         move["card_answers"] = {int( key ): value for key, value in move["card_answers"].items()}
 
-        #self.__current_position_board = move["position_type"]
+        self.__current_position_type = move["position_type"]
 
         self.__game_status = move["game_status"]
         if self.__deck.card is not None:
@@ -233,7 +291,6 @@ class Board:
 
         if move["game_status"] == 3:
             self.__deck.create_card_options( "create_answers", move["card_question"] )
-            self.__current_position_board = move["position_type"]
 
     def get_card_information(self, text_type, data_id):
         if text_type == "create_players":
@@ -241,7 +298,7 @@ class Board:
                 if player.identifier == data_id:
                     return player.name
         else:
-            return self.__deck.get_card_option_text( text_type, self.__current_position_board, data_id )
+            return self.__deck.get_card_option_text( text_type, self.__current_position_type, data_id )
 
     def get_logs_message(self, state):
         message = ""
@@ -325,5 +382,5 @@ class Board:
         return self.__positions
 
     @property
-    def current_position_board(self):
-        return self.__current_position_board
+    def current_position_type(self):
+        return self.__current_position_type
