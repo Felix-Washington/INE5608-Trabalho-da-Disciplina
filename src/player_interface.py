@@ -48,6 +48,8 @@ class PlayerInterface( DogPlayerInterface ):
         self.load_main_window()
 
         # Prevent main windows from minimize.
+        self.__root.mainloop()
+
         self.__root.deiconify()
 
         # Connection with DOG.
@@ -349,6 +351,3 @@ class PlayerInterface( DogPlayerInterface ):
     # Config to close the window.
     def on_closing(self):
         self.__root.destroy()
-
-    def board_loop(self):
-        self.__root.mainloop()
