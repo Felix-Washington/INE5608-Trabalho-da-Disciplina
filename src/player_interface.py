@@ -48,15 +48,17 @@ class PlayerInterface( DogPlayerInterface ):
         self.load_main_window()
 
         # Prevent main windows from minimize.
-        self.__root.mainloop()
-
-        self.__root.deiconify()
 
         # Connection with DOG.
         self.dog_server_interface = DogActor()
         player_name = simpledialog.askstring( title="Player identification", prompt="Qual o seu nome?" )
         message = self.dog_server_interface.initialize( player_name, self )
         messagebox.showinfo( message=message )
+
+        self.__root.mainloop()
+
+        self.__root.deiconify()
+
 
     def load_main_window(self):
         # Configuration of game window.
