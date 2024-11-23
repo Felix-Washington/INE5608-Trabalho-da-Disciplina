@@ -1,11 +1,10 @@
 # Project Imports
+import os
 import random
 
+from deck import Deck
 from player import Player
 from position import Position
-import os
-
-from deck import Deck
 
 
 class Board:

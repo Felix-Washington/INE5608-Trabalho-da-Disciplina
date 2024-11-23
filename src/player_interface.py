@@ -1,15 +1,13 @@
-from tkinter import *
-from tkinter import messagebox
-from tkinter import simpledialog
-
-import random
 import os
+import random
+from tkinter import *
+from tkinter import messagebox, simpledialog
+
 from PIL import Image, ImageTk
 
-from dog.dog_interface import DogPlayerInterface
-from dog.dog_actor import DogActor
-
 from board import Board
+from dog.dog_actor import DogActor
+from dog.dog_interface import DogPlayerInterface
 
 
 def row_frame_configure(frame, row_amount, weight):
