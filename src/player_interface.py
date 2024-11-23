@@ -190,28 +190,25 @@ class PlayerInterface( DogPlayerInterface ):
         # Used only when match has started.
         if received_data["game_status"] == 0:
             self.__board.remote_start_game( received_data )
+            self.__board.remote_start_game( received_data )
             self.set_positions()
             self.start_match_widget_packs()
-            self.__board.game_status = 1
-            if self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
-                self.__board.update_board_position()
-                self.__deck_button['state'] = 'normal'
         else:
             self.__board.update_received_data( received_data )
 
-            if self.__board.game_status == 4:
+        if self.__board.game_status == 4:
             # and self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
-                self.__board.game_status = 2
-                self.__board.check_board_status( "" )
+            self.__board.game_status = 2
+            self.__board.check_board_status( "" )
 
-            elif self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
-                self.__board.game_status = 1
-                self.__deck_button['state'] = 'normal'
+        elif self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
+            self.__board.game_status = 1
+            self.__deck_button['state'] = 'normal'
 
-            # 3 - Game status: temporary turn.
-            elif self.__board.game_status == 3:
-                if self.__board.local_player.turn:
-                    self.draw_and_select( state="create_answers" )
+        # 3 - Game status: temporary turn.
+        elif self.__board.game_status == 3:
+            if self.__board.local_player.turn:
+                self.draw_and_select( "create_answers" )
 
         self.update_widget_packs()
 

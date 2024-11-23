@@ -224,7 +224,9 @@ class Board:
         elif len( self.__winners ) > 1:
             pass
         else:
-            self.__game_status = 2
+            self.update_turn()
+            self.__game_status = 1
+            self.update_board_position()
 
     def receive_withdrawal_notification(self):
         self.__game_status = 6  # match abandoned by opponent
@@ -245,8 +247,6 @@ class Board:
             if player.identifier != self.__current_player_turn.identifier:
                 player.turn = False
             player.reset_turn()
-
-        self.update_board_position()
 
     def update_board_position(self):
         self.__current_position_type = self.__positions[self.__current_player_turn.position_board].type
@@ -288,6 +288,8 @@ class Board:
         if self.__deck.card is not None:
             self.__deck.card.question = move["card_question"]
         self.__deck.card_current_answers = move["card_answers"]
+
+        self.__current_position_board = move["position_type"]
 
         if move["game_status"] == 3:
             self.__deck.create_card_options( "create_answers", move["card_question"] )
