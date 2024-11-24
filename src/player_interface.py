@@ -3,7 +3,7 @@ import random
 from tkinter import *
 from tkinter import messagebox, simpledialog
 
-from PIL import Image, ImageTk
+from PIL import Image
 
 from board import Board
 from dog.dog_actor import DogActor
@@ -55,7 +55,7 @@ class PlayerInterface( DogPlayerInterface ):
         message = self.dog_server_interface.initialize( player_name, self )
         messagebox.showinfo( message=message )
 
-        self.__root.mainloop()
+        #self.__root.mainloop()
 
         self.__root.deiconify()
 
@@ -192,24 +192,15 @@ class PlayerInterface( DogPlayerInterface ):
         else:
             self.__board.update_received_data( received_data )
 
-        if self.__board.game_status == 1:
-            self.__board.update_current_local_player()
-
-        # Check if a temporary turn has been finished
-        if self.__board.game_status == 4:
-            # and self.__board.current_local_player:
-            self.__board.game_status = 2
-            self.draw_and_select("")
-
-        elif self.__board.current_local_player:
-            print("release deck button","current",self.__board.current_player.name,"local", self.__board.local_player.name)
-            self.__board.game_status = 1
+        state = self.__board.process_receive_move()
+        print(state)
+        print(self.__board.game_status)
+        if state == "reset_play":
+            self.draw_and_select( "" )
+        elif state == "release_deck":
             self.__deck_button['state'] = 'normal'
-
-        # 3 - Game status: temporary turn.
-        elif self.__board.game_status == 3:
-            if self.__board.local_player.turn:
-                self.draw_and_select( "create_answers", self.__board.local_player.selected_question )
+        elif state == "create_answers":
+            self.draw_and_select( state, self.__board.local_player.selected_question )
 
         self.update_widget_packs()
 
@@ -240,7 +231,7 @@ class PlayerInterface( DogPlayerInterface ):
             if self.__board.current_local_player:
                 i.configure( text='Jogador da vez: Você.', background='#90EE90', bg='#90EE90' )
             else:
-                i.configure( text=f'Jogador da vez: {self.__board.current_player.name}.', background="#d95f57",
+                i.configure( text=f'Jogador da vez: {self.__board.get_current_player_data("name")}.', background="#d95f57",
                              bg='#d95f57' )
         # Logs block
         self.__logs_frame.grid( row=1, column=0, padx=5, pady=5 )
@@ -263,7 +254,7 @@ class PlayerInterface( DogPlayerInterface ):
 
         self.__current_turn.grid( row=0, column=0, padx=5, pady=5, sticky='ew' )
         current_turn_label = Label( self.__current_turn,
-                                    text=f'Turno do Jogador: {self.__board.current_player.name}.',
+                                    text=f'Turno do Jogador: {self.__board.get_current_player_data("name")}.',
                                     fg='white', background='#d95f57',
                                     font=24 )
 
@@ -352,3 +343,6 @@ class PlayerInterface( DogPlayerInterface ):
     # Config to close the window.
     def on_closing(self):
         self.__root.destroy()
+
+    def board_loop(self):
+        self.__root.mainloop()
