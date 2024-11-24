@@ -59,7 +59,6 @@ class PlayerInterface( DogPlayerInterface ):
 
         self.__root.deiconify()
 
-
     def load_main_window(self):
         # Configuration of game window.
         self.__root.geometry( f"{self.__game_size[0]}x{self.__game_size[1]}+{self.__game_pos_x}+{self.__game_pos_y}" )
@@ -104,8 +103,7 @@ class PlayerInterface( DogPlayerInterface ):
             self.dog_server_interface.send_move( self.__board.get_start_match_data() )
 
             self.__board.game_status = 1
-            if self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
-                self.__board.update_board_position()
+            if self.__board.current_local_player:
                 self.__deck_button['state'] = 'normal'
             self.update_widget_packs()
 
@@ -126,8 +124,6 @@ class PlayerInterface( DogPlayerInterface ):
         card_interface.resizable( width=False, height=False )
         card_interface.configure( background='#ffbd59' )
 
-        card_frame = Frame( card_interface, background='#ffbd59' )
-
         # Update card title text base on card type.
         card_title_text = ""
         card_option_type = ""
@@ -143,6 +139,7 @@ class PlayerInterface( DogPlayerInterface ):
             card_title_text = "Escolha um jogador!"
             card_option_type = "selected_a_player"
 
+        card_frame = Frame( card_interface, background='#ffbd59' )
         # Create Label with card title text.
         card_title = Label( card_interface, text=card_title_text, width=300, height=8 )
 
@@ -163,15 +160,13 @@ class PlayerInterface( DogPlayerInterface ):
         card_interface.protocol( "WM_DELETE_WINDOW", lambda: card_interface.destroy() )
 
     # Function called to process card interface.
-    def draw_and_select(self, state=-1, selected_options=-1):
-        print('das', selected_options, state)
-        state = self.__board.check_board_status(state, selected_options)
-
+    def draw_and_select(self, state, selected_options=-1):
+        state = self.__board.check_board_status( state, selected_options )
         move = self.__board.get_move_to_send()
         self.dog_server_interface.send_move( move )
 
         if state:
-            self.update_card_interface(state)
+            self.update_card_interface( state )
 
     # Insert game status to interface log list.
     def update_gui_message(self, state):
@@ -181,7 +176,7 @@ class PlayerInterface( DogPlayerInterface ):
             self.__logs_listbox.yview( 0 )
 
     def receive_start(self, start_status):
-        self.__board.receive_start(start_status)
+        self.__board.receive_start( start_status )
 
     def receive_withdrawal_notification(self):
         messagebox.showinfo( message=f"player {self.__board.local_player.name} disconected" )
@@ -191,32 +186,36 @@ class PlayerInterface( DogPlayerInterface ):
     def receive_move(self, received_data):
         # Used only when match has started.
         if received_data["game_status"] == 0:
-            self.__board.remote_start_game( received_data )
-            self.__board.remote_start_game( received_data )
+            self.__board.remote_start_match( received_data )
             self.set_positions()
             self.start_match_widget_packs()
         else:
             self.__board.update_received_data( received_data )
 
-        if self.__board.game_status == 4:
-            # and self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
-            self.__board.game_status = 2
-            self.__board.check_board_status( "" )
+        if self.__board.game_status == 1:
+            self.__board.update_current_local_player()
 
-        elif self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
+        # Check if a temporary turn has been finished
+        if self.__board.game_status == 4:
+            # and self.__board.current_local_player:
+            self.__board.game_status = 2
+            self.draw_and_select("")
+
+        elif self.__board.current_local_player:
+            print("release deck button","current",self.__board.current_player.name,"local", self.__board.local_player.name)
             self.__board.game_status = 1
             self.__deck_button['state'] = 'normal'
 
         # 3 - Game status: temporary turn.
         elif self.__board.game_status == 3:
             if self.__board.local_player.turn:
-                self.draw_and_select( "create_answers" )
+                self.draw_and_select( "create_answers", self.__board.local_player.selected_question )
 
         self.update_widget_packs()
 
     # Fuction used to update interface elements.
     def update_widget_packs(self):
-        # Destroy all widget from positions except type image.
+        # Destroy all widgets from positions except type image.
         for position in self.__board.positions:
             position.widget.grid_propagate( False )
             if len( position.widget.winfo_children() ):
@@ -238,10 +237,10 @@ class PlayerInterface( DogPlayerInterface ):
 
         # Frame that shows current player.
         for i in self.__current_turn.winfo_children():
-            if self.__board.local_player.identifier == self.__board.current_player_turn.identifier:
+            if self.__board.current_local_player:
                 i.configure( text='Jogador da vez: Você.', background='#90EE90', bg='#90EE90' )
             else:
-                i.configure( text=f'Jogador da vez: {self.__board.current_player_turn.name}.', background="#d95f57",
+                i.configure( text=f'Jogador da vez: {self.__board.current_player.name}.', background="#d95f57",
                              bg='#d95f57' )
         # Logs block
         self.__logs_frame.grid( row=1, column=0, padx=5, pady=5 )
@@ -264,7 +263,7 @@ class PlayerInterface( DogPlayerInterface ):
 
         self.__current_turn.grid( row=0, column=0, padx=5, pady=5, sticky='ew' )
         current_turn_label = Label( self.__current_turn,
-                                    text=f'Turno do Jogador: {self.__board.current_player_turn.name}.',
+                                    text=f'Turno do Jogador: {self.__board.current_player.name}.',
                                     fg='white', background='#d95f57',
                                     font=24 )
 

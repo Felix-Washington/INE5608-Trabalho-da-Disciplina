@@ -53,15 +53,15 @@ class Deck:
 
         self.__card = Card( questions_current_list )
 
-    def create_card_options(self, data_type, data_id):
-        if data_type == "create_questions":
+    def create_card_options(self, state, options):
+        if state == "create_questions":
             self.create_card()
-        elif data_type == "create_answers":
+        elif state == "create_answers":
             # If type = answers, data_id will be a key from a selected question.
-            self.__card = Card( self.__card_current_answers[data_id], data_id )
+            self.__card = Card( self.__card_current_answers[options], options )
         else:
-            # If type = players, data_id will be a list of players ids.
-            self.__card = Card( data_id )
+            # If type = players, options will be a list of players ids.
+            self.__card = Card( options )
 
     def check_answer(self, answer):
         correct_answer = self.__questions_with_answers[self.__card.question]
