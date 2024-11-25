@@ -2,6 +2,7 @@
 import os
 import random
 import datetime
+import time
 
 from deck import Deck
 from player import Player
@@ -20,7 +21,7 @@ class Board:
         self.__deck = Deck()
 
         # Board attributes
-        self.__tile_amount = 30
+        self.__tile_amount = 0
         # A list of objects "Position".
         self.__positions = []
         # 0 - Start game / 1 - Waiting player move / 2 - End play / 3 - Temporary play / 4 - End temporary play
@@ -34,6 +35,10 @@ class Board:
         self.__current_position_type = -1
 
         self.__winners = []
+
+        self.__start = 0
+        self.__end = 0
+        self.__last_position = 0
 
     def start_match(self, players_id, local_player_id):
         # 0 - Name , 1 - ID , 2 - Connection order.
@@ -105,8 +110,9 @@ class Board:
             else:
                 new_type = int( random.uniform( 1, 3 ) )
             position_type_list.append( new_type )
+            self.__last_position = i
 
-        position_type_list[0] = 3
+        position_type_list[0] = 2
         position_type_list[self.__tile_amount + 1] = 0
 
         # Call a function to create position objects.
@@ -129,8 +135,15 @@ class Board:
             self.__positions.append( new_position )
 
     def check_board_status(self, state, selected_option=-1):
-        global time
-        print(time.set(str(datetime.datetime.now())))
+        # global time
+        # print(time.set(str(datetime.datetime.now())))
+
+        if state == "create_answers" and self.__current_position_type == 2:
+            self.__start = time.time()
+        elif state == "selected_an_answer" and self.__current_position_type == 2:
+            self.__end = time.time()
+            self.__local_player.time_answered = self.__end - self.__start
+
         if state == "create_answers":
             self.__local_player.selected_question = selected_option
             if self.__current_position_type == 3 and self.__game_status == 1:
@@ -214,7 +227,6 @@ class Board:
 
     # Process all moves made from players.
     def process_board_status(self):
-        winners = []
         for player in self.__players:
             if player.turn:
                 # 1 = Correct / -1 = Wrong
@@ -233,11 +245,12 @@ class Board:
                 if player.position_board < 0:
                     player.position_board = 0
                 # Check if player is on the last board tile.
-                elif player.position_board >= self.__tile_amount:
-                    player.position_board = 30
+                elif player.position_board >= self.__last_position:
+                    player.position_board = self.__last_position
                     player.winner = True
-                    winners.append( player.identifier )
+                    self.__winners.append( player )
 
+        print(self.__winners)
         if len( self.__winners ) == 1:
             self.__game_status = 5
         elif len( self.__winners ) > 1:
@@ -248,7 +261,29 @@ class Board:
             self.update_board_position()
 
     def verify_time_response(self):
-        pass
+        slowest_response = 0
+        winners = self.__winners
+
+        for player in winners:
+            response_time = player.time_answered
+            print(response_time)
+            if response_time > slowest_response:
+                slowest_response = response_time
+                slowest_player = player
+        
+        slowest_player.position_board -= 1
+
+        winners.remove(slowest_player)
+        self.__winners = winners
+
+        print(self.__winners)
+
+        # slowest_response = 0
+        # for player in self.__winners:
+        #     if player.time_answered > slowest_response:
+        #         slowest_response = player.time_answered
+        #         slowest_player = player
+        # self.__winners.pop(slowest_player)
 
     def receive_withdrawal_notification(self):
         self.__game_status = 6  # match abandoned by opponent

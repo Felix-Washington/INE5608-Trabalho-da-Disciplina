@@ -3,8 +3,6 @@ import random
 from tkinter import *
 from tkinter import messagebox, simpledialog
 
-from PIL import Image
-
 from board import Board
 from dog.dog_actor import DogActor
 from dog.dog_interface import DogPlayerInterface
@@ -27,7 +25,7 @@ class PlayerInterface( DogPlayerInterface ):
         self.__root = Tk()
 
         # Window size and position.
-        self.__game_size = [int( self.__root.winfo_screenwidth() / 3 ), 800]
+        self.__game_size = [int( self.__root.winfo_screenwidth() / 2 ), 800]
         self.__game_pos_x = int( self.__root.winfo_screenwidth() / 2 - self.__game_size[0] / 2 )
         self.__game_pos_y = int( self.__root.winfo_screenheight() / 2 - self.__game_size[1] / 2 )
 
