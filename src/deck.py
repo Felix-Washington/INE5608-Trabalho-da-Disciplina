@@ -57,7 +57,7 @@ class Deck:
         if state == "create_questions":
             self.create_card()
         elif state == "create_answers":
-            # If type = answers, data_id will be a key from a selected question.
+            # If type = answers, options will be a key from a selected question.
             self.__card = Card( self.__card_current_answers[options], options )
         else:
             # If type = players, options will be a list of players ids.

@@ -31,7 +31,7 @@ class Player:
 
     def get_player_data(self):
         return [self.__position_board, self.__turn, self.__selected_player, self.__selected_question,
-                self.__selected_answer, self.__time_answered]
+                self.__selected_answer, self.__time_answered, self.__winner]
 
     @property
     def identifier(self):

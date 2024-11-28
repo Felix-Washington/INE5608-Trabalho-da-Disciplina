@@ -45,7 +45,6 @@ class PlayerInterface( DogPlayerInterface ):
 
         self.load_main_window()
 
-        # Prevent main windows from minimize.
 
         # Connection with DOG.
         self.dog_server_interface = DogActor()
@@ -53,8 +52,9 @@ class PlayerInterface( DogPlayerInterface ):
         message = self.dog_server_interface.initialize( player_name, self )
         messagebox.showinfo( message=message )
 
-        #self.__root.mainloop()
+        # self.__root.mainloop()
 
+        # Prevent main windows from minimize.
         self.__root.deiconify()
 
     def load_main_window(self):
@@ -91,14 +91,17 @@ class PlayerInterface( DogPlayerInterface ):
         else:  # (code=='2')
             players_id = start_status.get_players()
             local_player_id = start_status.get_local_id()
+
             self.__board.start_match( players_id, local_player_id )
             messagebox.showinfo( message=start_status.get_message() )
 
             self.set_positions()
             self.start_match_widget_packs()
 
+            move = self.__board.get_start_match_data()
+            print(move)
             # Send first move to all players.
-            self.dog_server_interface.send_move( self.__board.get_start_match_data() )
+            self.dog_server_interface.send_move( move  )
 
             self.__board.game_status = 1
             if self.__board.current_local_player:
@@ -114,8 +117,8 @@ class PlayerInterface( DogPlayerInterface ):
         card = self.__board.deck.card
 
         # Get x and y position of the card.
-        card_width_pos = int( self.__game_pos_x + self.__game_pos_x / 2 - (card.width / 2) )
-        card_height_pos = int( self.__game_pos_y + self.__game_pos_y / 2 )
+        card_width_pos = int( (self.__root.winfo_x() + self.__game_size[0] / 2 ) - (card.width / 2) )
+        card_height_pos = int( self.__root.winfo_y() )
 
         # Set card window position and size.
         card_interface.geometry( f'{card.width}x{card.height}+{card_width_pos}+{card_height_pos}' )
@@ -163,9 +166,13 @@ class PlayerInterface( DogPlayerInterface ):
         state = self.__board.check_board_status( state, selected_options )
         move = self.__board.get_move_to_send()
         self.dog_server_interface.send_move( move )
-        print(state, self.__board.game_status)
-        if state:
+
+        if state == "game_end":
+            messagebox.showinfo( message=f"Jogador {self.__board.get_winners_name()} venceu!" )
+        elif state:
             self.update_card_interface( state )
+
+        self.update_widget_packs()
 
     # Insert game status to interface log list.
     def update_gui_message(self, state):
@@ -175,10 +182,10 @@ class PlayerInterface( DogPlayerInterface ):
             self.__logs_listbox.yview( 0 )
 
     def receive_start(self, start_status):
-        self.__board.receive_start( start_status )
+        local_player_id = start_status.get_local_id()
+        self.__board.receive_start( local_player_id )
 
     def receive_withdrawal_notification(self):
-        messagebox.showinfo( message=f"player {self.__board.local_player.name} disconected" )
         self.__board.receive_withdrawal_notification()
         # self.update_gui(game_state)
 
@@ -192,13 +199,15 @@ class PlayerInterface( DogPlayerInterface ):
             self.__board.update_received_data( received_data )
 
         state = self.__board.process_receive_move()
-        print(state)
+
         if state == "reset_play":
             self.draw_and_select( "" )
         elif state == "release_deck":
             self.__deck_button['state'] = 'normal'
         elif state == "create_answers":
             self.draw_and_select( state, self.__board.local_player.selected_question )
+        elif state == "game_end":
+            messagebox.showinfo( message=f"Jogador {self.__board.get_winners_name()} venceu!" )
 
         self.update_widget_packs()
 
@@ -225,12 +234,17 @@ class PlayerInterface( DogPlayerInterface ):
                 player_column = 0
 
         # Frame that shows current player.
+        player_image = PhotoImage( file=self.__board.get_current_player_data( "image" ) )
+        player_label = Label( self.__current_turn, image=player_image, width=40, height=40 )
         for i in self.__current_turn.winfo_children():
             if self.__board.current_local_player:
                 i.configure( text='Jogador da vez: Você.', background='#90EE90', bg='#90EE90' )
             else:
-                i.configure( text=f'Jogador da vez: {self.__board.get_current_player_data("name")}.', background="#d95f57",
+                i.configure( text=f'Jogador da vez: {self.__board.get_current_player_data( "name" )}.',
+                             background="#d95f57",
                              bg='#d95f57' )
+            player_label.grid( row=2, column=2, padx=1, pady=1 )
+            player_label.image = player_image
         # Logs block
         self.__logs_frame.grid( row=1, column=0, padx=5, pady=5 )
         # self.__logs_listbox.pack( fill='both', expand=True )
@@ -252,7 +266,7 @@ class PlayerInterface( DogPlayerInterface ):
 
         self.__current_turn.grid( row=0, column=0, padx=5, pady=5, sticky='ew' )
         current_turn_label = Label( self.__current_turn,
-                                    text=f'Turno do Jogador: {self.__board.get_current_player_data("name")}.',
+                                    text=f'Turno do Jogador: {self.__board.get_current_player_data( "name" )}.',
                                     fg='white', background='#d95f57',
                                     font=24 )
 
