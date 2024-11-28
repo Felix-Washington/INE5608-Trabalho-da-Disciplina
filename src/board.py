@@ -193,7 +193,8 @@ class Board:
             return "reset_play"
         elif self.__current_local_player:
             self.__game_status = 1
-            return "release_deck"
+            if self.__local_player.selected_player == -1:
+                return "release_deck"
         # 3 - Game status: temporary turn.
         elif self.__game_status == 3:
             if self.__local_player.turn:

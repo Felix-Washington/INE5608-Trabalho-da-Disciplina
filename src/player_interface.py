@@ -126,7 +126,7 @@ class PlayerInterface( DogPlayerInterface ):
         card_title_text = ""
         card_option_type = ""
 
-        if state == "create_questions":
+        if state == "create_questions" and self.__board.current_local_player:
             self.__deck_button['state'] = 'disabled'
             card_title_text = "Escolha uma pergunta!"
             card_option_type = "create_answers"
@@ -159,10 +159,11 @@ class PlayerInterface( DogPlayerInterface ):
 
     # Function called to process card interface.
     def draw_and_select(self, state, selected_options=-1):
+        self.__deck_button['state'] = 'disabled'
         state = self.__board.check_board_status( state, selected_options )
         move = self.__board.get_move_to_send()
         self.dog_server_interface.send_move( move )
-
+        print(state, self.__board.game_status)
         if state:
             self.update_card_interface( state )
 
@@ -192,7 +193,6 @@ class PlayerInterface( DogPlayerInterface ):
 
         state = self.__board.process_receive_move()
         print(state)
-        print(self.__board.game_status)
         if state == "reset_play":
             self.draw_and_select( "" )
         elif state == "release_deck":
