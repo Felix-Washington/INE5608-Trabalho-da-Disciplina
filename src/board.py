@@ -21,7 +21,7 @@ class Board:
         self.__deck = Deck()
 
         # Board attributes
-        self.__tile_amount = 0
+        self.__tile_amount = 20
         # A list of objects "Position".
         self.__positions = []
         # 0 - Start game / 1 - Waiting player move / 2 - End play / 3 - Temporary play / 4 - End temporary play
@@ -112,7 +112,7 @@ class Board:
             position_type_list.append( new_type )
             self.__last_position = i
 
-        position_type_list[0] = 2
+        position_type_list[0] = 3
         position_type_list[self.__tile_amount + 1] = 0
 
         # Call a function to create position objects.
