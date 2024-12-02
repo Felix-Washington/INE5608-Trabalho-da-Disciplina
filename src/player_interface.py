@@ -99,7 +99,6 @@ class PlayerInterface( DogPlayerInterface ):
             self.start_match_widget_packs()
 
             move = self.__board.get_start_match_data()
-            print(move)
             # Send first move to all players.
             self.dog_server_interface.send_move( move  )
 
@@ -109,9 +108,12 @@ class PlayerInterface( DogPlayerInterface ):
             self.update_widget_packs()
 
     def update_card_interface(self, state):
+        def no_close():
+            return
         self.update_gui_message( state )
         # Create window popup for the card.
         card_interface = Toplevel()
+        card_interface.protocol("WM_DELETE_WINDOW", no_close)
         card_interface.title( "Carta" )
 
         card = self.__board.deck.card
@@ -158,7 +160,6 @@ class PlayerInterface( DogPlayerInterface ):
 
         card_interface.focus()
         card_interface.grab_set()
-        card_interface.protocol( "WM_DELETE_WINDOW", lambda: card_interface.destroy() )
 
     # Function called to process card interface.
     def draw_and_select(self, state, selected_options=-1):
@@ -167,12 +168,13 @@ class PlayerInterface( DogPlayerInterface ):
         move = self.__board.get_move_to_send()
         self.dog_server_interface.send_move( move )
 
+        self.update_widget_packs()
+
         if state == "game_end":
             messagebox.showinfo( message=f"Jogador {self.__board.get_winners_name()} venceu!" )
         elif state:
             self.update_card_interface( state )
 
-        self.update_widget_packs()
 
     # Insert game status to interface log list.
     def update_gui_message(self, state):
@@ -206,10 +208,11 @@ class PlayerInterface( DogPlayerInterface ):
             self.__deck_button['state'] = 'normal'
         elif state == "create_answers":
             self.draw_and_select( state, self.__board.local_player.selected_question )
-        elif state == "game_end":
-            messagebox.showinfo( message=f"Jogador {self.__board.get_winners_name()} venceu!" )
 
         self.update_widget_packs()
+
+        if state == "game_end":
+            messagebox.showinfo( message=f"Jogador {self.__board.get_winners_name()} venceu!" )
 
     # Fuction used to update interface elements.
     def update_widget_packs(self):

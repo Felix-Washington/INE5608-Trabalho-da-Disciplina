@@ -20,7 +20,7 @@ class Board:
         self.__deck = Deck()
 
         # Board attributes
-        self.__tile_amount = 20
+        self.__tile_amount = 10
         # A list of objects "Position".
         self.__positions = []
         # 0 - Start game / 1 - Waiting player move / 2 - End play / 3 - Temporary play / 4 - End temporary play
@@ -34,8 +34,6 @@ class Board:
         self.__current_position_type = -1
 
         # Time
-        self.__start = 0
-        self.__end = 0
         self.__last_position = self.__tile_amount + 2
 
     def start_match(self, players, local_player_id):
@@ -43,7 +41,6 @@ class Board:
 
         for player in players:
 
-            print( player[0], player[2] )
             new_player_name = player[0]
             new_player_id = player[1]
             new_player_image = f"images/kid_{player[2]}.png"
@@ -136,13 +133,9 @@ class Board:
     def check_board_status(self, state, selected_option=-1):
 
         if state == "create_answers" and self.__current_position_type == 2:
-            self.__start = time.time()
-            self.__local_player = time.time()
+            self.__local_player.time_answered = time.time()
         elif state == "selected_an_answer" and self.__current_position_type == 2:
-            self.__end = time.time()
             self.__local_player.time_answered = time.time() - self.__local_player.time_answered
-            print( "start + end", self.__end - self.__start )
-            print( "local", self.__local_player.time_answered )
 
         if state == "create_answers":
             self.__local_player.selected_question = selected_option
@@ -235,10 +228,8 @@ class Board:
     def process_board_status(self):
         winners = []
         for player in self.__players:
+            print(player.name, player.turn)
             if player.turn:
-                if self.__current_position_type == 3:
-                    print( "name:", player.name, "answer:", player.selected_answer, "local_name:",
-                           self.__local_player.name, "local_answer:", self.__local_player.selected_answer )
                 # 1 = Correct / -1 = Wrong
                 walk_value = self.__deck.check_answer( player.selected_answer )
                 # Check if position is "simples" and player got a correct answer.
@@ -266,7 +257,7 @@ class Board:
         else:
             self.update_turn()
             self.__game_status = 1
-            self.update_board_position()
+            self.__current_position_type = self.__positions[self.get_current_player_data( "position_board" )].type
 
     def verify_winner(self, winners):
         slowest_response = 0
@@ -310,13 +301,11 @@ class Board:
         self.__local_player.reset_turn()
         self.update_current_local_player()
 
-    def update_board_position(self):
-        self.__current_position_type = self.__positions[self.get_current_player_data( "position_board" )].type
-
     # Update all data received from receive move made from another player.
     def update_received_data(self, received_data):
         self.__current_position_type = received_data["position_type"]
         self.__game_status = received_data["game_status"]
+        answer = -1
 
         for player in self.__players:
             for key, data in received_data["players"].items():
@@ -329,13 +318,17 @@ class Board:
                     player.selected_answer = data[4]
                     player.time_answered = data[5]
                     player.winner = data[6]
-                if self.__current_position_type == 3 and self.__current_local_player and player.selected_answer != -1:
-                    self.__local_player.selected_answer = player.selected_answer
+                if player.selected_answer != -1:
+                    answer = player.selected_answer
+
+        #testei mudar a condição
+        if self.__current_position_type == 3 and self.__local_player.selected_player != -1:
+            self.__local_player.selected_answer = answer
 
         self.__current_player_id = received_data["current_player"]
 
         for i in range( len( self.__players ) ):
-            # Check if local player has been selected to answer a question.
+            # Check if local player hasd been selected to answer a question.
             if self.__players[i].selected_player == self.__local_player.identifier:
                 self.__local_player.selected_question = self.__players[i].selected_question
                 self.__local_player.turn = True
