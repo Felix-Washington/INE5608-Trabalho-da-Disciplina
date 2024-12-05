@@ -53,6 +53,8 @@ class PlayerInterface( DogPlayerInterface ):
         # Prevent main windows from minimize.
         self.__root.deiconify()
 
+        self.__players_qtd = 3
+
     def load_main_window(self):
         # Configuration of game window.
         self.__root.geometry( f"{self.__game_size[0]}x{self.__game_size[1]}+{self.__game_pos_x}+{self.__game_pos_y}" )
@@ -76,7 +78,7 @@ class PlayerInterface( DogPlayerInterface ):
 
     # Call DOG to try start the match.
     def start_match(self):
-        start_status = self.dog_server_interface.start_match( 2 )
+        start_status = self.dog_server_interface.start_match( self.__players_qtd)
         code = start_status.get_code()
         message = start_status.get_message()
 
@@ -289,7 +291,7 @@ class PlayerInterface( DogPlayerInterface ):
         players_frame.grid( row=3, column=0 )
         column = 0
         players_frame_title = Label( players_frame, text="Jogadores" )
-        players_frame_title.grid( row=0, column=0, columnspan=2 )
+        players_frame_title.grid( row=0, column=0, columnspan=self.__players_qtd )
         for player in self.__board.players:
             player_image = PhotoImage( file=player.image )
             player_label = Label( players_frame, image=player_image, width=50, height=50 )
