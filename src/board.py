@@ -227,11 +227,9 @@ class Board:
     def process_board_status(self):
         winners = []
         for player in self.__players:
-            print(player.name, "turn:", player.turn, "ans", player.selected_answer, "quest", player.selected_question)
             if player.turn:
                 # 1 = Correct / -1 = Wrong
                 walk_value = self.__deck.check_answer( player.selected_answer )
-                print("player", player.name, "answers", player.selected_answer, "walk", walk_value)
                 # Check if position is "simples" and player got a correct answer.
                 if self.__current_position_type == 1 and walk_value == 1:
                     walk_value = 2
@@ -250,7 +248,6 @@ class Board:
                     player.position_board = self.__last_position
                     player.winner = True
                     winners.append( player )
-        print("-------------------------------")
         if len( winners ) > 0:
             self.verify_winner( winners )
             self.__game_status = 5
@@ -275,16 +272,11 @@ class Board:
             winners.remove( slowest_player )
 
     def get_winners_message(self):
-        if self.__current_local_player:
-            message = "Você venceu!"
-        else:
-            winner_name = ""
-            for player in self.__players:
-                if player.winner:
-                    winner_name = player.name
-            message = f"Jogador {winner_name} venceu!"
-
-        return message
+        for player in self.__players:
+            if player.winner:
+                if self.__local_player.winner:
+                    return "Você venceu!"
+                return f"Jogador {player.name} venceu!"
 
     # Update to next player on turn list.
     def update_turn(self):
@@ -309,37 +301,26 @@ class Board:
     def update_received_data(self, received_data):
         self.__current_position_type = received_data["position_type"]
         self.__game_status = received_data["game_status"]
-        answer = -1
-
-        for player in self.__players:
-            for key, data in received_data["players"].items():
-                # Update all received player data.
-                if player.identifier == key:
-                    player.position_board = data[0]
-                    player.turn = data[1]
-                    player.selected_player = data[2]
-                    player.selected_question = data[3]
-                    player.selected_answer = data[4]
-                    player.time_answered = data[5]
-                    player.winner = data[6]
-                if player.selected_answer != -1:
-                    answer = player.selected_answer
-
-        # testei mudar a condição
-        if self.__current_position_type == 3 and self.__local_player.selected_player != -1:
-            self.__local_player.selected_answer = answer
-
         self.__current_player_id = received_data["current_player"]
 
-        for i in range( len( self.__players ) ):
-            # Check if local player has been selected to answer a question.
-            if self.__players[i].selected_player == self.__local_player.identifier:
-                self.__local_player.selected_question = self.__players[i].selected_question
-                self.__local_player.turn = True
-                break
+        for player in self.__players:
+            data = received_data["players"][player.identifier]
+            player.position_board = data[0]
+            player.turn = data[1]
+            player.selected_player = data[2]
+            player.selected_question = data[3]
+            player.selected_answer = data[4]
+            player.time_answered = data[5]
+            player.winner = data[6]
 
-            elif self.__players[i].identifier == self.__local_player.identifier and self.__game_status == 4:
-                self.__players[i] = self.__local_player
+        for player in self.__players:
+            if player.selected_player == self.__local_player.identifier:
+                self.__local_player.selected_question = player.selected_question
+                self.__local_player.turn = True
+
+            # Update answer to be processed by current player side
+            elif self.__current_position_type == 3 and self.__local_player.selected_player != -1 and player.selected_answer != -1:
+                self.__local_player.selected_answer = player.selected_answer
 
         # Convert all keys from string to int.
         received_data["card_answers"] = {int( key ): value for key, value in received_data["card_answers"].items()}
@@ -347,7 +328,6 @@ class Board:
         if self.__deck.card is not None:
             self.__deck.card.question = received_data["card_question"]
         self.__deck.card_current_answers = received_data["card_answers"]
-
 
     def get_card_information(self, text_type, data_id):
         if text_type == "create_players":

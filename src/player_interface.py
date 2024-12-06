@@ -58,7 +58,7 @@ class PlayerInterface( DogPlayerInterface ):
     def load_main_window(self):
         # Configuration of game window.
         self.__root.geometry( f"{self.__game_size[0]}x{self.__game_size[1]}+{self.__game_pos_x}+{self.__game_pos_y}" )
-        self.__root.title( "Tabuleiro" )
+        self.__root.title( "Certo ou Errado" )
         self.__root.protocol( "WM_DELETE_WINDOW", self.__root.destroy )
         self.__root.resizable( False, False )
 
@@ -167,7 +167,8 @@ class PlayerInterface( DogPlayerInterface ):
         self.update_widget_packs()
 
         if state == "game_end":
-            messagebox.showinfo( message=self.__board.get_winners_message() )
+            message = self.__board.get_winners_message()
+            messagebox.showinfo( message=message )
         elif state:
             self.update_card_interface( state )
 

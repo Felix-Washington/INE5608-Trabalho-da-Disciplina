@@ -181,8 +181,8 @@ class Deck:
             5: "Crocodilo-de-água-salgada", 6: "Jacaré", 7: "Abelha", 8: "Tubarão-baleia", 9: "Preguiça",
 
             # Colors
-            10: "Azul", 11: "Verde", 12: "Preto e branco", 13: "Vermelho", 14: "Branco",
-            15: "Amarelo", 16: "Verde", 17: "Laranja", 18: "Roxo", 19: "Verde",
+            10: "Azul",11: "Verde", 12: "Preto", 13: "Vermelho", 14: "Branco",
+            15: "Amarelo", 16: "Verde e Amarelo", 17: "Laranja ou Amarelo", 18: "Roxo", 19: "Rosa",
 
             # Dates
             20: "1669", 21: "1500", 22: "1889", 23: "1822", 24: "1904",
@@ -234,7 +234,7 @@ class Deck:
             135: "Velociraptor", 136: "Buzz Lightyear", 137: "Dory", 138: "César", 139: "Ultron",
 
             # Sports
-            140: "Rugby", 141: "Sete", 142: "Baseball", 143: "Vôlei", 144: "Doze anéis",
+            140: "Rugby", 141: "Certo ou Errado", 142: "Baseball", 143: "Vôlei", 144: "Canoagem",
             145: "Nado sincronizado", 146: "Hóquei no gelo", 147: "Dardos", 148: "Sinuca", 149: "Luta livre",
 
             # Food
@@ -265,3 +265,7 @@ class Deck:
     @card_current_answers.setter
     def card_current_answers(self, card_current_answers):
         self.__card_current_answers = card_current_answers
+
+    @property
+    def questions(self):
+        return self.__questions
