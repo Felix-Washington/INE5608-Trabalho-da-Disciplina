@@ -105,10 +105,11 @@ class Board:
                 new_type = 3
             else:
                 new_type = int( random.uniform( 1, 3 ) )
+            new_type = 1
             position_type_list.append( new_type )
             self.__last_position = i
 
-        position_type_list[0] = 3
+        position_type_list[0] = 1
         position_type_list[self.__tile_amount + 1] = 0
 
         # Call a function to create position objects.
@@ -339,13 +340,15 @@ class Board:
 
     def get_logs_message(self, state):
         message = ""
-        selected_player_name = ""
+        selected_player_name = self.get_current_player_data( 'selected_player' )
 
         if self.__game_status == 3:
             for player in self.__players:
-                if self.get_current_player_data( 'selected_player' ) == player.identifier:
+                if selected_player_name == player.identifier:
                     selected_player_name = player.name
                     break
+
+        current_player_name = self.get_current_player_data( 'name' )
 
         if self.__game_status == 1:
             if self.__current_local_player:
@@ -359,24 +362,24 @@ class Board:
                     message = f"Você selecionou o jogador {selected_player_name} para responder uma pergunta."
             else:
                 if state == "create_questions":
-                    message = f"Jogador {self.get_current_player_data( 'name' )} comprou uma carta."
+                    message = f"Jogador {current_player_name} comprou uma carta."
                 elif state == "create_answers":
-                    message = f"Jogador {self.get_current_player_data( 'name' )} selecionou uma pergunta."
-                elif state == "selected_answer":
-                    message = f"Jogador {self.get_current_player_data( 'name' )} selecionou uma resposta."
+                    message = f"Jogador {current_player_name} selecionou uma pergunta."
+                elif state == "selected_an_answer":
+                    message = f"Jogador {current_player_name} selecionou uma resposta."
         elif self.__game_status == 2:
-            message = f"Jogada finalizada, novo jogador da vez: {self.get_current_player_data( 'name' )}."
+            message = f"Jogada finalizada, novo jogador da vez: {current_player_name}."
         elif self.__game_status == 3:
             if self.__local_player.turn:
                 if state == "selected_a_player":
-                    message = f"Jogador {self.get_current_player_data( 'name' )} enviou uma pergunta para você."
+                    message = f"Jogador {current_player_name} enviou uma pergunta para você."
                 elif state == "create_answers":
-                    message = f"Você respondeu a pergunta enviada pelo jogador {self.get_current_player_data( 'name' )}."
+                    message = f"Você respondeu a pergunta enviada pelo jogador {current_player_name}."
             else:
                 if state == "selected_a_player":
-                    message = f"Jogador {self.get_current_player_data( 'name' )} selecionou o jogador {selected_player_name} para responder."
+                    message = f"Jogador {current_player_name} selecionou o jogador {selected_player_name} para responder."
                 elif state == "create_answers":
-                    message = f"Jogador {selected_player_name } respondeu a pergunta enviada pelo jogador {self.get_current_player_data( 'name' )}."
+                    message = f"Jogador {selected_player_name } respondeu a pergunta enviada pelo jogador {current_player_name}."
         elif self.__game_status == 5:
             message = self.get_winners_message()
         elif self.__game_status == 6:

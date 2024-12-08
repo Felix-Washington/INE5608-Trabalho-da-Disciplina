@@ -12,17 +12,10 @@ class Player:
         self.__winner = False
 
     def initialize(self, a_name, image, an_id, turn=False):
-        self.reset()
         self.__name = a_name
         self.__image = image
         self.__identifier = an_id
         self.__turn = turn
-
-    def reset(self):
-        self.__identifier = ""
-        self.__name = ""
-        self.__turn = False
-        self.__position_board = 0
 
     def reset_turn(self):
         self.__selected_player = -1

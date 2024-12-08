@@ -13,7 +13,7 @@ class Deck:
         # Key is the type of category, value is a list of answers from that category.
         self.__categories_answers = {}
         # Object card that's created when a player interact with deck.
-        self.__card = None
+        self.__card = Card([0])
         # Function that create and sort all game data (questions, answers and their references).
         self.create_dicts()
 

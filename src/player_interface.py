@@ -199,6 +199,8 @@ class PlayerInterface( DogPlayerInterface ):
 
         state = self.__board.process_receive_move()
 
+        if self.__board.game_status in [2,4]:
+            self.__board.deck.questions.pop(received_data["card_question"])
         if state == "reset_play":
             self.draw_and_select( "" )
         elif state == "release_deck":
@@ -211,6 +213,8 @@ class PlayerInterface( DogPlayerInterface ):
 
         if state == "game_end":
             messagebox.showinfo( message=self.__board.get_winners_message() )
+
+        print(self.__board.deck.questions.keys())
 
     # Fuction used to update interface elements.
     def update_widget_packs(self):
