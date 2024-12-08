@@ -210,11 +210,10 @@ class PlayerInterface( DogPlayerInterface ):
 
         self.update_gui_message( received_data['state'] )
         self.update_widget_packs()
-
+        print(self.__board.deck.questions.keys())
         if state == "game_end":
             messagebox.showinfo( message=self.__board.get_winners_message() )
 
-        print(self.__board.deck.questions.keys())
 
     # Fuction used to update interface elements.
     def update_widget_packs(self):

@@ -105,11 +105,11 @@ class Board:
                 new_type = 3
             else:
                 new_type = int( random.uniform( 1, 3 ) )
-            new_type = 1
+
             position_type_list.append( new_type )
             self.__last_position = i
 
-        position_type_list[0] = 1
+        position_type_list[0] = 3
         position_type_list[self.__tile_amount + 1] = 0
 
         # Call a function to create position objects.
@@ -179,6 +179,7 @@ class Board:
         # Get send move to remote players with updated data.
 
     def process_receive_move(self):
+        #print("process_receive_move game_status", self.__game_status)
         if self.__game_status == 1:
             self.update_current_local_player()
         # Check if a temporary turn has been finished
@@ -186,6 +187,7 @@ class Board:
             self.__game_status = 2
             return "reset_play"
         elif self.__current_local_player:
+            #print("entrou __current_local_player")
             self.__game_status = 1
             if self.__local_player.selected_player == -1:
                 return "release_deck"
@@ -222,10 +224,15 @@ class Board:
                         "card_question": card_question, "card_answers": self.__deck.card_current_answers,
                         "position_type": self.__current_position_type, "match_status": "next", "state": state}
 
+        print("move_to_send", move_to_send)
         return move_to_send
 
     # Process all moves made from players.
     def process_board_status(self):
+        for i in range( len( self.__players ) ):
+            if self.__players[i].identifier == self.__local_player.identifier:
+                self.__players[i] = self.__local_player
+
         winners = []
         for player in self.__players:
             if player.turn:
@@ -326,8 +333,7 @@ class Board:
         # Convert all keys from string to int.
         received_data["card_answers"] = {int( key ): value for key, value in received_data["card_answers"].items()}
 
-        if self.__deck.card is not None:
-            self.__deck.card.question = received_data["card_question"]
+        self.__deck.card.question = received_data["card_question"]
         self.__deck.card_current_answers = received_data["card_answers"]
 
     def get_card_information(self, text_type, data_id):
