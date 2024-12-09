@@ -89,7 +89,7 @@ class PlayerInterface( DogPlayerInterface ):
             local_player_id = start_status.get_local_id()
 
             self.__board.start_match( players_id, local_player_id )
-            messagebox.showinfo( message=start_status.get_message() )
+            messagebox.showinfo( message=message )
 
             self.set_positions()
             self.start_match_widget_packs()
@@ -99,7 +99,7 @@ class PlayerInterface( DogPlayerInterface ):
             self.dog_server_interface.send_move( move )
 
             self.__board.game_status = 1
-            if self.__board.current_local_player:
+            if self.__board.local_player.current_local_player:
                 self.__deck_button['state'] = 'normal'
             self.update_widget_packs()
 
@@ -173,7 +173,7 @@ class PlayerInterface( DogPlayerInterface ):
             self.update_card_interface( state )
 
     # Insert game status to interface log list.
-    def update_gui_message(self, state):
+    def update_gui_message(self, state = ""):
         message = self.__board.get_logs_message( state )
         if message != "":
             self.__logs_listbox.insert( 0, message )
@@ -182,11 +182,14 @@ class PlayerInterface( DogPlayerInterface ):
     def receive_start(self, start_status):
         local_player_id = start_status.get_local_id()
         self.__board.receive_start( local_player_id )
+        message = start_status.get_message()
+        messagebox.showinfo( message=message )
 
     def receive_withdrawal_notification(self):
         self.__board.game_status = 6
-        self.update_gui_message( "" )
-        messagebox.showinfo( message="Um jogador foi desconectado." )
+        self.update_gui_message()
+        message="Um jogador foi desconectado."
+        messagebox.showinfo( message=message )
 
     def receive_move(self, received_data):
         # Used only when match has started.
@@ -241,7 +244,7 @@ class PlayerInterface( DogPlayerInterface ):
         player_image = PhotoImage( file=self.__board.get_current_player_data( "image" ) )
         player_label = Label( self.__current_turn, image=player_image, width=40, height=40 )
         for i in self.__current_turn.winfo_children():
-            if self.__board.current_local_player:
+            if self.__board.local_player.current_local_player:
                 i.configure( text='Jogador da vez: Você.', background='#90EE90', bg='#90EE90' )
             else:
                 i.configure( text=f'Jogador da vez: {self.__board.get_current_player_data( "name" )}.',

@@ -10,6 +10,7 @@ class Player:
         self.__selected_answer = -1
         self.__time_answered = 0
         self.__winner = False
+        self.__current_local_player = False
 
     def initialize(self, a_name, image, an_id, turn=False):
         self.__name = a_name
@@ -65,6 +66,14 @@ class Player:
     @winner.setter
     def winner(self, winner):
         self.__winner = winner
+
+    @property
+    def current_local_player(self):
+        return self.__current_local_player
+
+    @current_local_player.setter
+    def current_local_player(self, current_local_player):
+        self.__current_local_player = current_local_player
 
     @property
     def selected_player(self):
