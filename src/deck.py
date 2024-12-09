@@ -62,6 +62,10 @@ class Deck:
         if answer == self.__card.question:
             return 1
         return -1
+    
+    def discard_question(self):
+        question = self.__card.question
+        self.__questions.pop(question)
 
     def get_card_option_text(self, text_type, position_board=1, data_id=-1):
         if text_type == "question_title":

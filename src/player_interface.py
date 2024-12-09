@@ -169,6 +169,8 @@ class PlayerInterface( DogPlayerInterface ):
         if state == "game_end":
             message = self.__board.get_winners_message()
             messagebox.showinfo( message=message )
+        elif state == "reset_play":
+            self.__board.game_status = 1
         elif state:
             self.update_card_interface( state )
 
@@ -201,9 +203,7 @@ class PlayerInterface( DogPlayerInterface ):
             self.__board.update_received_data( received_data )
 
         state = self.__board.process_receive_move()
-
-        if self.__board.game_status in [2,4]:
-            self.__board.deck.questions.pop(received_data["card_question"])
+            
         if state == "reset_play":
             self.draw_and_select( "" )
         elif state == "release_deck":
@@ -213,7 +213,7 @@ class PlayerInterface( DogPlayerInterface ):
 
         self.update_gui_message( received_data['state'] )
         self.update_widget_packs()
-        print(self.__board.deck.questions.keys())
+
         if state == "game_end":
             messagebox.showinfo( message=self.__board.get_winners_message() )
 

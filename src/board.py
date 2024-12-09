@@ -20,7 +20,7 @@ class Board:
         self.__deck = Deck()
 
         # Board attributes
-        self.__tile_amount = 5
+        self.__tile_amount = 20
         # A list of objects "Position".
         self.__positions = []
         # 0 - Start game / 1 - Waiting player move / 2 - End play / 3 - Temporary play / 4 - End temporary play
@@ -167,12 +167,15 @@ class Board:
             self.process_board_status()
             if self.__game_status == 5:
                 return "game_end"
+            return "reset_play"
 
         return None
         # Get send move to remote players with updated data.
 
     def process_receive_move(self):
-        #print("process_receive_move game_status", self.__game_status)
+        if self.__game_status == 2:
+            self.__deck.discard_question()
+            self.__game_status = 1
         if self.__game_status == 1:
             self.update_current_local_player()
         # Check if a temporary turn has been finished
@@ -208,15 +211,16 @@ class Board:
             players[self.__players[i].identifier] = self.__players[i].get_player_data()
 
             # It means that a player has been selected.
-            if self.__players[i].selected_question != -1:
-                card_question = self.__players[i].selected_question
+            # if self.__players[i].selected_question != -1:
+            #     card_question = self.__players[i].selected_question
+            card_question = self.__deck.card.question
+
 
         move_to_send = {"players": players, "current_player": self.__current_player_id,
                         "game_status": self.__game_status,
                         "card_question": card_question, "card_answers": self.__deck.card_current_answers,
                         "position_type": self.__current_position_type, "match_status": "next", "state": state}
 
-        print("move_to_send", move_to_send)
         return move_to_send
 
     # Process all moves made from players.
@@ -252,9 +256,9 @@ class Board:
             self.verify_winner( winners )
             self.__game_status = 5
         else:
-            self.__deck.questions.pop(self.__deck.card.question)
+            self.__deck.discard_question()
             self.update_turn()
-            self.__game_status = 1
+            self.__game_status = 2
             self.__current_position_type = self.__positions[self.get_current_player_data( "position_board" )].type
 
     def verify_winner(self, winners):
@@ -326,7 +330,7 @@ class Board:
         # Convert all keys from string to int.
         received_data["card_answers"] = {int( key ): value for key, value in received_data["card_answers"].items()}
 
-        self.__deck.card.question = received_data["card_question"]
+        self.__deck.card.question = int(received_data["card_question"])
         self.__deck.card_current_answers = received_data["card_answers"]
 
     def get_card_information(self, text_type, data_id):
