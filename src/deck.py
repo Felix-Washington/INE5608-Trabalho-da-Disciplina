@@ -1,8 +1,6 @@
 import random
 from card import Card
 
-import os
-
 
 class Deck:
     def __init__(self):

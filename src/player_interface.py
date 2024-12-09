@@ -1,5 +1,3 @@
-import os
-import random
 from tkinter import *
 from tkinter import messagebox, simpledialog
 
